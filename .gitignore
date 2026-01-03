@@ -24,6 +24,7 @@ MANIFEST
 
 # Virtual environments
 venv/
+.venv/
 env/
 ENV/
 env.bak/
@@ -32,8 +33,10 @@ venv.bak/
 # PyCharm
 .idea/
 
-# VS Code
-.vscode/
+# VS Code - Keep workspace settings, ignore user-specific files
+.vscode/*.code-workspace
+.vscode/launch.local.json
+.vscode/settings.local.json
 
 # Testing
 .pytest_cache/
@@ -41,19 +44,26 @@ venv.bak/
 htmlcov/
 .tox/
 .nox/
+coverage.xml
+*.cover
 
-# Mypy
+# Type checking
 .mypy_cache/
 .dmypy.json
 dmypy.json
 
+# Linting cache
+.ruff_cache/
+
 # GitHub Manager data directories
 .github-manager/
-*.log
+
+# Environment variables
+.env
+.env.local
 
 # GitHub token files
 .github_token
-.env
 
 # OS
 .DS_Store
@@ -63,38 +73,5 @@ Thumbs.db
 *.tmp
 *.bak
 *.swp
-*~
-
-# Environment variables
-.env
-
-# Coverage reports
-htmlcov/
-.coverage
-.coverage.*
-coverage.xml
-*.cover
-
-# Build artifacts
-build/
-dist/
-*.egg-info/
-
-# Cache directories
-__pycache__/
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
-
-# IDE
-.vscode/
-.idea/
-*.swp
 *.swo
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Data directories
-.github-manager/
+*~

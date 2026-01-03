@@ -1,0 +1,64 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Install Dev Dependencies",
+      "type": "shell",
+      "command": "pip install -e '.[dev]'",
+      "problemMatcher": [],
+      "group": "build"
+    },
+    {
+      "label": "Run Tests",
+      "type": "shell",
+      "command": "pytest",
+      "problemMatcher": [],
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "Run Tests with Coverage",
+      "type": "shell",
+      "command": "pytest --cov=sage_github --cov-report=html --cov-report=term",
+      "problemMatcher": [],
+      "group": "test"
+    },
+    {
+      "label": "Format Code (Ruff)",
+      "type": "shell",
+      "command": "ruff format .",
+      "problemMatcher": [],
+      "group": "build"
+    },
+    {
+      "label": "Lint Code (Ruff)",
+      "type": "shell",
+      "command": "ruff check --fix .",
+      "problemMatcher": [],
+      "group": "build"
+    },
+    {
+      "label": "Type Check (Mypy)",
+      "type": "shell",
+      "command": "mypy src/sage_github",
+      "problemMatcher": [],
+      "group": "build"
+    },
+    {
+      "label": "Run Pre-commit Hooks",
+      "type": "shell",
+      "command": "pre-commit run --all-files",
+      "problemMatcher": [],
+      "group": "build"
+    },
+    {
+      "label": "Clean Build Artifacts",
+      "type": "shell",
+      "command": "make clean",
+      "problemMatcher": [],
+      "group": "build"
+    }
+  ]
+}
