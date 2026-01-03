@@ -4,8 +4,8 @@
 用于shell脚本调用
 """
 
-import sys
 from pathlib import Path
+import sys
 
 # 动态导入config模块
 try:

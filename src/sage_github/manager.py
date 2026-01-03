@@ -5,12 +5,12 @@ Lightweight manager that uses the centralized config
 and calls helper scripts from helpers/ when available.
 """
 
+from datetime import datetime
 import json
 import os
+from pathlib import Path
 import subprocess
 import sys
-from datetime import datetime
-from pathlib import Path
 from typing import Any
 
 from .config import IssuesConfig
@@ -286,6 +286,449 @@ class IssuesManager:
             stats["authors"][author_name] = stats["authors"].get(author_name, 0) + 1
 
         return stats
+
+    def list_issues(
+        self,
+        state: str = "all",
+        labels: list[str] | None = None,
+        assignee: str | None = None,
+        milestone: str | None = None,
+        author: str | None = None,
+        sort_by: str = "created",
+        reverse: bool = True,
+        limit: int | None = None,
+    ) -> list[dict[str, Any]]:
+        """
+        列出和过滤Issues
+
+        Args:
+            state: 状态过滤 (all/open/closed)
+            labels: 标签过滤
+            assignee: 负责人过滤
+            milestone: 里程碑过滤
+            author: 创建者过滤
+            sort_by: 排序字段 (created/updated/comments/number)
+            reverse: 是否降序
+            limit: 限制结果数量
+
+        Returns:
+            过滤后的Issues列表
+        """
+        from sage_github.helpers.filter_issues import IssuesFilter
+
+        issues = self.load_issues()
+        if not issues:
+            return []
+
+        # 使用过滤器
+        filter_tool = IssuesFilter(issues)
+        filtered_issues = filter_tool.apply_filters(
+            state=state,
+            labels=labels,
+            assignee=assignee,
+            milestone=milestone,
+            author=author,
+            sort_by=sort_by,
+            reverse=reverse,
+            limit=limit,
+        )
+
+        return filtered_issues
+
+    def export_issues(
+        self,
+        output_path: Path | str,
+        format: str = "csv",
+        state: str = "all",
+        labels: list[str] | None = None,
+        assignee: str | None = None,
+        milestone: str | None = None,
+        author: str | None = None,
+        template: str = "default",
+    ) -> bool:
+        """
+        导出Issues到文件
+
+        Args:
+            output_path: 输出文件路径
+            format: 导出格式 (csv/json/markdown)
+            state: 状态过滤
+            labels: 标签过滤
+            assignee: 负责人过滤
+            milestone: 里程碑过滤
+            author: 创建者过滤
+            template: Markdown模板 (default/roadmap/report)
+
+        Returns:
+            是否成功
+        """
+        from sage_github.helpers.export_issues import IssuesExporter
+
+        # 获取过滤后的Issues
+        issues = self.list_issues(
+            state=state,
+            labels=labels,
+            assignee=assignee,
+            milestone=milestone,
+            author=author,
+            sort_by="created",
+            reverse=True,
+        )
+
+        if not issues:
+            print("⚠️ 没有符合条件的Issues")
+            return False
+
+        # 转换路径
+        output_path = Path(output_path)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+
+        # 导出
+        exporter = IssuesExporter(issues)
+
+        if format == "csv":
+            success = exporter.export_to_csv(output_path)
+        elif format == "json":
+            success = exporter.export_to_json(output_path, pretty=True)
+        elif format == "markdown":
+            success = exporter.export_to_markdown(output_path, template=template)
+        else:
+            print(f"❌ 不支持的格式: {format}")
+            return False
+
+        if success:
+            print(f"✅ 导出成功: {output_path}")
+            print(f"📊 导出了 {len(issues)} 个Issues")
+        return success
+
+    def batch_close(
+        self,
+        state: str = "all",
+        labels: list[str] | None = None,
+        assignee: str | None = None,
+        milestone: str | None = None,
+        author: str | None = None,
+        dry_run: bool = False,
+        auto_confirm: bool = False,
+    ) -> dict[str, Any]:
+        """批量关闭Issues
+
+        Args:
+            state: 状态过滤
+            labels: 标签过滤
+            assignee: 负责人过滤
+            milestone: 里程碑过滤
+            author: 创建者过滤
+            dry_run: 是否为预览模式
+            auto_confirm: 是否自动确认
+
+        Returns:
+            操作结果统计
+        """
+        from sage_github.helpers.batch_operations import BatchOperations
+
+        # 获取匹配的Issues
+        issues = self.list_issues(
+            state=state,
+            labels=labels,
+            assignee=assignee,
+            milestone=milestone,
+            author=author,
+        )
+
+        # 执行批量关闭
+        batch_ops = BatchOperations(
+            owner=self.config.GITHUB_OWNER,
+            repo=self.config.GITHUB_REPO,
+            token=self.config.github_token,
+        )
+        return batch_ops.close_issues(issues, dry_run=dry_run, auto_confirm=auto_confirm)
+
+    def batch_add_labels(
+        self,
+        add_labels: list[str],
+        state: str = "all",
+        labels: list[str] | None = None,
+        assignee: str | None = None,
+        milestone: str | None = None,
+        author: str | None = None,
+        dry_run: bool = False,
+        auto_confirm: bool = False,
+    ) -> dict[str, Any]:
+        """批量添加标签
+
+        Args:
+            add_labels: 要添加的标签列表
+            state: 状态过滤
+            labels: 标签过滤
+            assignee: 负责人过滤
+            milestone: 里程碑过滤
+            author: 创建者过滤
+            dry_run: 是否为预览模式
+            auto_confirm: 是否自动确认
+
+        Returns:
+            操作结果统计
+        """
+        from sage_github.helpers.batch_operations import BatchOperations
+
+        issues = self.list_issues(
+            state=state,
+            labels=labels,
+            assignee=assignee,
+            milestone=milestone,
+            author=author,
+        )
+
+        batch_ops = BatchOperations(
+            owner=self.config.GITHUB_OWNER,
+            repo=self.config.GITHUB_REPO,
+            token=self.config.github_token,
+        )
+        return batch_ops.add_labels(issues, add_labels, dry_run=dry_run, auto_confirm=auto_confirm)
+
+    def batch_remove_labels(
+        self,
+        remove_labels: list[str],
+        state: str = "all",
+        labels: list[str] | None = None,
+        assignee: str | None = None,
+        milestone: str | None = None,
+        author: str | None = None,
+        dry_run: bool = False,
+        auto_confirm: bool = False,
+    ) -> dict[str, Any]:
+        """批量移除标签
+
+        Args:
+            remove_labels: 要移除的标签列表
+            state: 状态过滤
+            labels: 标签过滤
+            assignee: 负责人过滤
+            milestone: 里程碑过滤
+            author: 创建者过滤
+            dry_run: 是否为预览模式
+            auto_confirm: 是否自动确认
+
+        Returns:
+            操作结果统计
+        """
+        from sage_github.helpers.batch_operations import BatchOperations
+
+        issues = self.list_issues(
+            state=state,
+            labels=labels,
+            assignee=assignee,
+            milestone=milestone,
+            author=author,
+        )
+
+        batch_ops = BatchOperations(
+            owner=self.config.GITHUB_OWNER,
+            repo=self.config.GITHUB_REPO,
+            token=self.config.github_token,
+        )
+        return batch_ops.remove_labels(
+            issues, remove_labels, dry_run=dry_run, auto_confirm=auto_confirm
+        )
+
+    def batch_assign(
+        self,
+        assignees: list[str],
+        state: str = "all",
+        labels: list[str] | None = None,
+        assignee: str | None = None,
+        milestone: str | None = None,
+        author: str | None = None,
+        dry_run: bool = False,
+        auto_confirm: bool = False,
+    ) -> dict[str, Any]:
+        """批量分配Issues
+
+        Args:
+            assignees: 负责人列表
+            state: 状态过滤
+            labels: 标签过滤
+            assignee: 负责人过滤
+            milestone: 里程碑过滤
+            author: 创建者过滤
+            dry_run: 是否为预览模式
+            auto_confirm: 是否自动确认
+
+        Returns:
+            操作结果统计
+        """
+        from sage_github.helpers.batch_operations import BatchOperations
+
+        issues = self.list_issues(
+            state=state,
+            labels=labels,
+            assignee=assignee,
+            milestone=milestone,
+            author=author,
+        )
+
+        batch_ops = BatchOperations(
+            owner=self.config.GITHUB_OWNER,
+            repo=self.config.GITHUB_REPO,
+            token=self.config.github_token,
+        )
+        return batch_ops.assign_issues(
+            issues, assignees, dry_run=dry_run, auto_confirm=auto_confirm
+        )
+
+    def batch_set_milestone(
+        self,
+        milestone: str,
+        state: str = "all",
+        labels: list[str] | None = None,
+        assignee: str | None = None,
+        milestone_filter: str | None = None,
+        author: str | None = None,
+        dry_run: bool = False,
+        auto_confirm: bool = False,
+    ) -> dict[str, Any]:
+        """批量设置里程碑
+
+        Args:
+            milestone: 要设置的里程碑
+            state: 状态过滤
+            labels: 标签过滤
+            assignee: 负责人过滤
+            milestone_filter: 里程碑过滤
+            author: 创建者过滤
+            dry_run: 是否为预览模式
+            auto_confirm: 是否自动确认
+
+        Returns:
+            操作结果统计
+        """
+        from sage_github.helpers.batch_operations import BatchOperations
+
+        issues = self.list_issues(
+            state=state,
+            labels=labels,
+            assignee=assignee,
+            milestone=milestone_filter,
+            author=author,
+        )
+
+        batch_ops = BatchOperations(
+            owner=self.config.GITHUB_OWNER,
+            repo=self.config.GITHUB_REPO,
+            token=self.config.github_token,
+        )
+        return batch_ops.set_milestone(
+            issues, milestone, dry_run=dry_run, auto_confirm=auto_confirm
+        )
+
+    def summarize_issue(
+        self, issue_number: int, api_provider: str = "openai", max_length: int = 200
+    ) -> dict[str, Any] | None:
+        """生成 Issue 摘要
+
+        Args:
+            issue_number: Issue 编号
+            api_provider: API 提供商 (openai/claude)
+            max_length: 最大摘要长度
+
+        Returns:
+            包含摘要的字典，如果失败返回 None
+        """
+        from sage_github.helpers.ai_helper import AIHelper
+
+        # 加载 Issues
+        issues = self.load_issues()
+        issue = next((i for i in issues if i.get("number") == issue_number), None)
+
+        if not issue:
+            print(f"❌ 未找到 Issue #{issue_number}")
+            return None
+
+        # 生成摘要
+        ai = AIHelper(api_provider=api_provider)
+        summary = ai.summarize_issue(issue, max_length=max_length)
+
+        if summary:
+            return {
+                "number": issue_number,
+                "title": issue.get("title"),
+                "summary": summary,
+                "url": issue.get("html_url"),
+            }
+
+        return None
+
+    def detect_duplicates(self, threshold: float = 0.7) -> list[dict[str, Any]]:
+        """检测重复的 Issues
+
+        Args:
+            threshold: 相似度阈值 (0-1)
+
+        Returns:
+            重复对列表
+        """
+        from sage_github.helpers.ai_helper import AIHelper
+
+        issues = self.load_issues()
+        if not issues:
+            print("❌ 没有可用的 Issues")
+            return []
+
+        ai = AIHelper(silent=True)  # 不需要 API，使用静默模式
+        duplicates = ai.detect_duplicates(issues, threshold=threshold)
+
+        results = []
+        for issue1, issue2, similarity in duplicates:
+            results.append(
+                {
+                    "issue1": {
+                        "number": issue1.get("number"),
+                        "title": issue1.get("title"),
+                        "url": issue1.get("html_url"),
+                    },
+                    "issue2": {
+                        "number": issue2.get("number"),
+                        "title": issue2.get("title"),
+                        "url": issue2.get("html_url"),
+                    },
+                    "similarity": round(similarity, 2),
+                }
+            )
+
+        return results
+
+    def suggest_labels_for_issue(self, issue_number: int) -> dict[str, Any] | None:
+        """为 Issue 推荐标签
+
+        Args:
+            issue_number: Issue 编号
+
+        Returns:
+            包含推荐标签的字典，如果失败返回 None
+        """
+        from sage_github.helpers.ai_helper import AIHelper
+
+        issues = self.load_issues()
+        issue = next((i for i in issues if i.get("number") == issue_number), None)
+
+        if not issue:
+            print(f"❌ 未找到 Issue #{issue_number}")
+            return None
+
+        ai = AIHelper(silent=True)  # 标签建议不需要 API
+        suggested = ai.suggest_labels(issue)
+
+        existing_labels = [label.get("name") for label in issue.get("labels", [])]
+
+        return {
+            "number": issue_number,
+            "title": issue.get("title"),
+            "existing_labels": existing_labels,
+            "suggested_labels": suggested,
+            "new_labels": [label for label in suggested if label not in existing_labels],
+            "url": issue.get("html_url"),
+        }
 
     def show_statistics(self) -> bool:
         """显示Issues统计信息"""

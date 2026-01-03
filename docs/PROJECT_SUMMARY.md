@@ -120,7 +120,7 @@ pip install sage-github-manager
 |---------|-------------|
 | `github-manager status` | Show configuration and connection status |
 | `github-manager download` | Download issues from GitHub |
-| `github-manager stats` | Generate statistics report |
+| `github-manager analytics` | Generate statistics report |
 | `github-manager team` | Team management and analysis |
 | `github-manager ai` | AI-powered analysis |
 | `github-manager sync` | Sync with GitHub |

@@ -146,13 +146,13 @@ from typing import Dict, List
 
 def load_config(path: str) -> Dict[str, Any]:
     """Load configuration from file.
-    
+
     Args:
         path: Path to configuration file
-        
+
     Returns:
         Configuration dictionary
-        
+
     Raises:
         FileNotFoundError: If config file doesn't exist
         ValueError: If config file is invalid
@@ -162,7 +162,7 @@ def load_config(path: str) -> Dict[str, Any]:
             f"Config file not found: {path}. "
             f"Please create it from .env.template"
         )
-    
+
     with open(path) as f:
         return yaml.safe_load(f)
 ```
@@ -228,10 +228,10 @@ from typing import List, Dict
 
 def new_feature_function(data: List[Dict]) -> str:
     """Process data for new feature.
-    
+
     Args:
         data: List of dictionaries
-        
+
     Returns:
         Processed result
     """

@@ -8,7 +8,7 @@ All development tools and configurations have been set up for the sage-github-ma
 - **File**: `.github-copilot-instructions.md` (8.9KB)
 - **Status**: ✅ Created and committed
 - **Auto-load**: Yes, VS Code will automatically detect this file
-- **Content**: 
+- **Content**:
   - Project overview and structure
   - Critical coding principles (NO FALLBACK LOGIC)
   - Development workflow and best practices

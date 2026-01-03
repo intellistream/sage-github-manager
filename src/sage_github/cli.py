@@ -4,14 +4,14 @@ GitHub Issues Manager命令 - CLI接口
 """
 
 import os
+from pathlib import Path
 import subprocess
 import sys
-from pathlib import Path
 
-import typer
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
+import typer
 
 from sage_github import IssuesConfig, IssuesManager
 from sage_github.helpers import IssuesDownloader
@@ -112,9 +112,426 @@ def download(
         raise typer.Exit(1)
 
 
-@app.command("stats")
-def statistics():
-    """显示Issues统计信息"""
+@app.command("list")
+def list_issues(
+    state: str = "open",
+    label: list[str] | None = None,
+    assignee: str | None = None,
+    milestone: str | None = None,
+    author: str | None = None,
+    sort: str = "created",
+    reverse: bool = True,
+    limit: int | None = None,
+    show_body: bool = False,
+):
+    """列出和过滤Issues
+
+    灵活的Issues列表和筛选功能，支持多种过滤条件组合。
+
+    示例:
+      github-manager list                                # 列出所有开放的Issues
+      github-manager list --state all                    # 列出所有Issues
+      github-manager list --label bug --state open       # 列出开放的bug
+      github-manager list --assignee shuhao              # 列出分配给shuhao的Issues
+      github-manager list --milestone "v2.0"             # 列出v2.0里程碑的Issues
+      github-manager list --sort comments --limit 10     # 列出评论最多的10个Issues
+      github-manager list --body                         # 显示Issue正文摘要
+
+    参数:
+      --state: Issue状态 (all, open, closed), 默认: open
+      --label, -l: 按标签过滤 (可多次使用)
+      --assignee, -a: 按负责人过滤
+      --milestone, -m: 按里程碑过滤
+      --author: 按创建者过滤
+      --sort: 排序字段 (created, updated, comments, number), 默认: created
+      --reverse: 降序排列, 默认: True
+      --limit, -n: 限制显示数量
+      --body, -b: 显示Issue正文摘要
+    """
+    console.print(f"📋 [bold blue]Issues列表 (状态: {state})[/bold blue]")
+
+    manager = IssuesManager()
+
+    # 获取过滤后的Issues
+    issues = manager.list_issues(
+        state=state,
+        labels=label if label else None,
+        assignee=assignee,
+        milestone=milestone,
+        author=author,
+        sort_by=sort,
+        reverse=reverse,
+        limit=limit,
+    )
+
+    if not issues:
+        console.print("📭 [yellow]没有找到符合条件的Issues[/yellow]")
+        return
+
+    # 创建表格显示
+    table = Table(title=f"找到 {len(issues)} 个Issues")
+    table.add_column("#", style="cyan", width=6)
+    table.add_column("标题", style="white", no_wrap=False)
+    table.add_column("状态", style="green", width=8)
+    table.add_column("标签", style="yellow", width=20)
+    table.add_column("负责人", style="blue", width=12)
+
+    if show_body:
+        table.add_column("摘要", style="dim", width=30)
+
+    for issue in issues:
+        # 提取数据
+        number = str(issue.get("number", "N/A"))
+        title = issue.get("title", "未知")[:60]
+        state_value = issue.get("state", "open")
+        state_emoji = "🟢" if state_value == "open" else "🔴"
+
+        # 标签
+        labels = issue.get("labels", [])
+        label_names = [label["name"] if isinstance(label, dict) else label for label in labels]
+        labels_str = ", ".join(label_names[:3])  # 最多显示3个标签
+        if len(label_names) > 3:
+            labels_str += "..."
+
+        # 负责人
+        assignees = issue.get("assignees", [])
+        assignee_names = [a["login"] if isinstance(a, dict) else a for a in assignees]
+        assignees_str = ", ".join(assignee_names[:2]) if assignees else "未分配"
+        if len(assignee_names) > 2:
+            assignees_str += "..."
+
+        row = [
+            number,
+            title,
+            f"{state_emoji} {state_value}",
+            labels_str or "-",
+            assignees_str,
+        ]
+
+        if show_body:
+            body = issue.get("body", "")
+            summary = body[:50].replace("\n", " ") if body else "-"
+            if len(body) > 50:
+                summary += "..."
+            row.append(summary)
+
+        table.add_row(*row)
+
+    console.print(table)
+
+    # 显示过滤条件摘要
+    filters_applied = []
+    if state != "all":
+        filters_applied.append(f"状态={state}")
+    if label:
+        filters_applied.append(f"标签={', '.join(label)}")
+    if assignee is not None:
+        filters_applied.append(f"负责人={assignee or '未分配'}")
+    if milestone is not None:
+        filters_applied.append(f"里程碑={milestone or '无'}")
+    if author:
+        filters_applied.append(f"创建者={author}")
+
+    if filters_applied:
+        console.print(f"\n🔍 过滤条件: {' | '.join(filters_applied)}")
+
+
+@app.command("export")
+def export_issues(
+    output: str = typer.Argument(..., help="输出文件路径"),
+    format: str = typer.Option("csv", "--format", "-f", help="导出格式: csv, json, markdown"),
+    state: str = typer.Option("all", help="Issue状态: all, open, closed"),
+    label: list[str] = typer.Option([], "--label", "-l", help="按标签过滤"),
+    assignee: str | None = typer.Option(None, "--assignee", "-a", help="按负责人过滤"),
+    milestone: str | None = typer.Option(None, "--milestone", "-m", help="按里程碑过滤"),
+    author: str | None = typer.Option(None, "--author", help="按创建者过滤"),
+    template: str = typer.Option("default", help="Markdown模板: default, roadmap, report"),
+):
+    """导出Issues到文件
+
+    支持多种导出格式和过滤条件，方便生成报告和分析。
+
+    示例:
+      github-manager export issues.csv                    # 导出所有Issues到CSV
+      github-manager export issues.json -f json          # 导出为JSON
+      github-manager export roadmap.md -f markdown       # 导出为Markdown
+      github-manager export open_bugs.csv --state open --label bug
+      github-manager export v2.0.md -f markdown --milestone "v2.0" --template roadmap
+
+    支持的格式:
+      - csv: 适合在Excel/Sheets中分析
+      - json: 适合程序处理和API集成
+      - markdown: 适合文档和报告
+
+    Markdown模板:
+      - default: 完整的Issue详情列表
+      - roadmap: 按里程碑分组的路线图
+      - report: 简洁的报告格式
+    """
+    console.print(f"📤 [bold blue]导出Issues (格式: {format})[/bold blue]")
+
+    manager = IssuesManager()
+    output_path = Path(output)
+
+    # 自动添加扩展名
+    if not output_path.suffix:
+        if format == "csv":
+            output_path = output_path.with_suffix(".csv")
+        elif format == "json":
+            output_path = output_path.with_suffix(".json")
+        elif format == "markdown":
+            output_path = output_path.with_suffix(".md")
+
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console,
+    ) as progress:
+        task = progress.add_task("导出中...", total=None)
+
+        success = manager.export_issues(
+            output_path=output_path,
+            format=format,
+            state=state,
+            labels=label if label else [],
+            assignee=assignee,
+            milestone=milestone,
+            author=author,
+            template=template,
+        )
+
+        progress.update(task, completed=True)
+
+    if not success:
+        console.print("❌ [red]导出失败[/red]")
+        raise typer.Exit(1)
+
+    # 显示导出信息
+    console.print(f"\n📁 [green]文件位置[/green]: {output_path.absolute()}")
+    console.print(f"📊 [green]文件大小[/green]: {output_path.stat().st_size / 1024:.2f} KB")
+
+    # 显示过滤条件
+    filters_applied = []
+    if state != "all":
+        filters_applied.append(f"状态={state}")
+    if label:
+        filters_applied.append(f"标签={', '.join(label)}")
+    if assignee is not None:
+        filters_applied.append(f"负责人={assignee or '未分配'}")
+    if milestone is not None:
+        filters_applied.append(f"里程碑={milestone or '无'}")
+    if author:
+        filters_applied.append(f"创建者={author}")
+
+    if filters_applied:
+        console.print(f"\n🔍 应用的过滤条件: {' | '.join(filters_applied)}")
+
+
+@app.command("batch-close")
+def batch_close(
+    state: str = typer.Option("open", help="Issue状态: all, open, closed"),
+    label: list[str] = typer.Option([], "--label", "-l", help="按标签过滤"),
+    assignee: str | None = typer.Option(None, "--assignee", "-a", help="按负责人过滤"),
+    milestone: str | None = typer.Option(None, "--milestone", "-m", help="按里程碑过滤"),
+    author: str | None = typer.Option(None, "--author", help="按创建者过滤"),
+    dry_run: bool = typer.Option(False, "--dry-run", help="预览模式（不实际执行）"),
+    yes: bool = typer.Option(False, "--yes", "-y", help="跳过确认提示"),
+):
+    """批量关闭Issues
+
+    根据过滤条件批量关闭匹配的Issues。
+
+    示例:
+      github-manager batch-close --label wontfix                  # 关闭所有wontfix标签的Issues
+      github-manager batch-close --state open --milestone "v1.0"  # 关闭v1.0里程碑的所有打开Issues
+      github-manager batch-close --dry-run --label bug           # 预览要关闭的bug Issues
+      github-manager batch-close --assignee shuhao --yes         # 无需确认关闭shuhao的Issues
+
+    ⚠️  危险操作: 批量关闭Issues无法撤销，建议先使用 --dry-run 预览
+    """
+    console.print("🔒 [bold red]批量关闭Issues[/bold red]")
+
+    manager = IssuesManager()
+
+    result = manager.batch_close(
+        state=state,
+        labels=label if label else None,
+        assignee=assignee,
+        milestone=milestone,
+        author=author,
+        dry_run=dry_run,
+        auto_confirm=yes,
+    )
+
+    if result["skipped"] == result["total"] and not dry_run:
+        raise typer.Exit(1)
+
+
+@app.command("batch-label")
+def batch_label(
+    add: list[str] = typer.Option([], "--add", help="要添加的标签"),
+    remove: list[str] = typer.Option([], "--remove", help="要移除的标签"),
+    state: str = typer.Option("all", help="Issue状态: all, open, closed"),
+    label: list[str] = typer.Option([], "--label", "-l", help="按标签过滤"),
+    assignee: str | None = typer.Option(None, "--assignee", "-a", help="按负责人过滤"),
+    milestone: str | None = typer.Option(None, "--milestone", "-m", help="按里程碑过滤"),
+    author: str | None = typer.Option(None, "--author", help="按创建者过滤"),
+    dry_run: bool = typer.Option(False, "--dry-run", help="预览模式（不实际执行）"),
+    yes: bool = typer.Option(False, "--yes", "-y", help="跳过确认提示"),
+):
+    """批量管理标签
+
+    根据过滤条件批量添加或移除标签。
+
+    示例:
+      github-manager batch-label --add "priority:high" --label bug        # 为所有bug添加高优先级
+      github-manager batch-label --remove "needs-review" --state closed   # 从已关闭Issues移除待审核标签
+      github-manager batch-label --add "v2.0" --milestone "v2.0"          # 为v2.0里程碑添加标签
+      github-manager batch-label --add "urgent" --assignee shuhao --yes  # 无需确认添加urgent标签
+
+    💡 提示: 可以同时使用 --add 和 --remove 来执行多个操作
+    """
+    if not add and not remove:
+        console.print("❌ [red]请指定要添加（--add）或移除（--remove）的标签[/red]")
+        raise typer.Exit(1)
+
+    manager = IssuesManager()
+
+    # 执行添加标签
+    if add:
+        console.print(f"🏷️  [bold blue]批量添加标签: {', '.join(add)}[/bold blue]")
+        result_add = manager.batch_add_labels(
+            add_labels=add,
+            state=state,
+            labels=label if label else None,
+            assignee=assignee,
+            milestone=milestone,
+            author=author,
+            dry_run=dry_run,
+            auto_confirm=yes,
+        )
+        if result_add["skipped"] == result_add["total"] and not dry_run:
+            raise typer.Exit(1)
+
+    # 执行移除标签
+    if remove:
+        console.print(f"🏷️  [bold blue]批量移除标签: {', '.join(remove)}[/bold blue]")
+        result_remove = manager.batch_remove_labels(
+            remove_labels=remove,
+            state=state,
+            labels=label if label else None,
+            assignee=assignee,
+            milestone=milestone,
+            author=author,
+            dry_run=dry_run,
+            auto_confirm=yes,
+        )
+        if result_remove["skipped"] == result_remove["total"] and not dry_run:
+            raise typer.Exit(1)
+
+
+@app.command("batch-assign")
+def batch_assign(
+    assignee: list[str] = typer.Option([], "--assignee", "-a", help="负责人（可多个）"),
+    state: str = typer.Option("all", help="Issue状态: all, open, closed"),
+    label: list[str] = typer.Option([], "--label", "-l", help="按标签过滤"),
+    milestone: str | None = typer.Option(None, "--milestone", "-m", help="按里程碑过滤"),
+    author: str | None = typer.Option(None, "--author", help="按创建者过滤"),
+    dry_run: bool = typer.Option(False, "--dry-run", help="预览模式（不实际执行）"),
+    yes: bool = typer.Option(False, "--yes", "-y", help="跳过确认提示"),
+):
+    """批量分配Issues
+
+    根据过滤条件批量分配Issues给指定负责人。
+
+    示例:
+      github-manager batch-assign -a shuhao --label "priority:high"    # 分配高优先级Issues
+      github-manager batch-assign -a alice -a bob --milestone "v2.0"   # 分配给多人
+      github-manager batch-assign -a shuhao --state open --dry-run     # 预览分配
+      github-manager batch-assign -a team-lead --label bug --yes       # 无需确认分配bugs
+
+    💡 提示: 使用多个 -a 可以分配给多个负责人
+    """
+    if not assignee:
+        console.print("❌ [red]请指定负责人（--assignee 或 -a）[/red]")
+        raise typer.Exit(1)
+
+    console.print(f"👥 [bold blue]批量分配给: {', '.join(assignee)}[/bold blue]")
+
+    manager = IssuesManager()
+
+    result = manager.batch_assign(
+        assignees=assignee,
+        state=state,
+        labels=label if label else None,
+        milestone=milestone,
+        author=author,
+        dry_run=dry_run,
+        auto_confirm=yes,
+    )
+
+    if result["skipped"] == result["total"] and not dry_run:
+        raise typer.Exit(1)
+
+
+@app.command("batch-milestone")
+def batch_milestone(
+    milestone: str = typer.Argument(..., help="要设置的里程碑名称"),
+    state: str = typer.Option("all", help="Issue状态: all, open, closed"),
+    label: list[str] = typer.Option([], "--label", "-l", help="按标签过滤"),
+    assignee: str | None = typer.Option(None, "--assignee", "-a", help="按负责人过滤"),
+    current_milestone: str | None = typer.Option(
+        None, "--current-milestone", help="按当前里程碑过滤"
+    ),
+    author: str | None = typer.Option(None, "--author", help="按创建者过滤"),
+    dry_run: bool = typer.Option(False, "--dry-run", help="预览模式（不实际执行）"),
+    yes: bool = typer.Option(False, "--yes", "-y", help="跳过确认提示"),
+):
+    """批量设置里程碑
+
+    根据过滤条件批量设置Issues的里程碑。
+
+    示例:
+      github-manager batch-milestone "v2.0" --label feature           # 将所有feature设置到v2.0
+      github-manager batch-milestone "v3.0" --current-milestone "v2.0" # 将v2.0迁移到v3.0
+      github-manager batch-milestone "Sprint 5" --state open --dry-run # 预览设置
+      github-manager batch-milestone "Q1-2026" --assignee shuhao --yes # 无需确认设置
+
+    💡 提示: 使用 --current-milestone 可以批量迁移里程碑
+    """
+    console.print(f"🎯 [bold blue]批量设置里程碑: {milestone}[/bold blue]")
+
+    manager = IssuesManager()
+
+    result = manager.batch_set_milestone(
+        milestone=milestone,
+        state=state,
+        labels=label if label else None,
+        assignee=assignee,
+        milestone_filter=current_milestone,
+        author=author,
+        dry_run=dry_run,
+        auto_confirm=yes,
+    )
+
+    if result["skipped"] == result["total"] and not dry_run:
+        raise typer.Exit(1)
+
+
+@app.command("analytics")
+def analytics():
+    """显示Issues统计与分析
+
+    生成详细的Issues统计报告，包括：
+    - Issue状态分布（开放/关闭）
+    - 标签使用统计
+    - 负责人分配情况
+    - 里程碑进度
+    - 活跃度趋势
+
+    示例:
+      github-manager analytics    # 生成完整统计报告
+    """
     console.print("📊 [bold blue]Issues统计分析[/bold blue]")
 
     manager = IssuesManager()
@@ -132,6 +549,14 @@ def statistics():
         console.print("❌ [red]统计失败 - 请先下载Issues[/red]")
         console.print("💡 运行: github-manager download")
         raise typer.Exit(1)
+
+
+# 保留 stats 作为 analytics 的别名，用于向后兼容
+@app.command("stats", hidden=True)
+def statistics():
+    """显示Issues统计信息（已弃用，请使用 analytics）"""
+    console.print("⚠️  [yellow]'stats' 命令已弃用，请使用 'analytics'[/yellow]")
+    analytics()
 
 
 @app.command("team")
@@ -228,6 +653,178 @@ def show_config():
     console.print(f"  • 同步更新历史: {getattr(config, 'sync_update_history', True)}")
     console.print(f"  • 自动备份: {getattr(config, 'auto_backup', True)}")
     console.print(f"  • 详细输出: {getattr(config, 'verbose_output', False)}")
+
+
+@app.command("summarize")
+def summarize_issue(
+    issue: int = typer.Argument(..., help="Issue 编号"),
+    provider: str = typer.Option("openai", "--provider", "-p", help="AI 提供商: openai, claude"),
+    max_length: int = typer.Option(200, "--max-length", help="最大摘要长度"),
+):
+    """生成 Issue 的 AI 摘要
+
+    使用 AI 生成简洁的 Issue 摘要，帮助快速理解问题核心。
+
+    示例:
+      github-manager summarize 123                    # 使用 OpenAI 生成摘要
+      github-manager summarize 456 -p claude          # 使用 Claude 生成摘要
+      github-manager summarize 789 --max-length 300   # 自定义摘要长度
+
+    需要设置环境变量:
+      export OPENAI_API_KEY=sk-...       # 使用 OpenAI
+      export ANTHROPIC_API_KEY=sk-ant-...  # 使用 Claude
+    """
+    console.print(f"🤖 [bold blue]生成 Issue #{issue} 的 AI 摘要[/bold blue]\n")
+
+    manager = IssuesManager()
+
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console,
+    ) as progress:
+        task = progress.add_task("生成摘要中...", total=None)
+        result = manager.summarize_issue(issue, api_provider=provider, max_length=max_length)
+        progress.update(task, completed=True)
+
+    if not result:
+        console.print("❌ [red]生成摘要失败[/red]")
+        raise typer.Exit(1)
+
+    # 显示结果
+    console.print(f"📝 [bold cyan]Issue #{result['number']}[/bold cyan]")
+    console.print(f"🔗 {result['url']}\n")
+    console.print(f"[bold]标题:[/bold] {result['title']}\n")
+    console.print("[bold yellow]AI 摘要:[/bold yellow]")
+    console.print(f"[green]{result['summary']}[/green]")
+
+
+@app.command("detect-duplicates")
+def detect_duplicates(
+    threshold: float = typer.Option(0.7, "--threshold", "-t", help="相似度阈值 (0-1)"),
+    limit: int = typer.Option(20, "--limit", "-n", help="显示结果数量"),
+):
+    """检测重复的 Issues
+
+    基于标题和内容的文本相似度检测可能重复的 Issues。
+
+    示例:
+      github-manager detect-duplicates                  # 使用默认阈值 0.7
+      github-manager detect-duplicates -t 0.8           # 使用更严格的阈值
+      github-manager detect-duplicates -t 0.6 -n 50     # 显示更多结果
+
+    提示:
+      - 阈值越高，匹配越严格（更少误报）
+      - 阈值越低，匹配越宽松（可能更多误报）
+      - 推荐范围: 0.6 - 0.8
+    """
+    console.print(f"🔍 [bold blue]检测重复 Issues (阈值: {threshold})[/bold blue]\n")
+
+    manager = IssuesManager()
+
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console,
+    ) as progress:
+        task = progress.add_task("分析中...", total=None)
+        duplicates = manager.detect_duplicates(threshold=threshold)
+        progress.update(task, completed=True)
+
+    if not duplicates:
+        console.print("✅ [green]未发现重复的 Issues[/green]")
+        return
+
+    # 显示结果
+    console.print(f"📊 [yellow]发现 {len(duplicates)} 对可能重复的 Issues[/yellow]\n")
+
+    table = Table(title="重复 Issues")
+    table.add_column("Issue 1", style="cyan")
+    table.add_column("Issue 2", style="cyan")
+    table.add_column("相似度", style="yellow", justify="right")
+
+    for dup in duplicates[:limit]:
+        issue1 = dup["issue1"]
+        issue2 = dup["issue2"]
+        similarity = dup["similarity"]
+
+        title1 = issue1["title"][:40] + "..." if len(issue1["title"]) > 40 else issue1["title"]
+        title2 = issue2["title"][:40] + "..." if len(issue2["title"]) > 40 else issue2["title"]
+
+        table.add_row(
+            f"#{issue1['number']}: {title1}",
+            f"#{issue2['number']}: {title2}",
+            f"{similarity:.1%}",
+        )
+
+    console.print(table)
+
+    if len(duplicates) > limit:
+        console.print(f"\n💡 还有 {len(duplicates) - limit} 对结果，使用 --limit 查看更多")
+
+
+@app.command("suggest-labels")
+def suggest_labels(
+    issue: int = typer.Argument(..., help="Issue 编号"),
+):
+    """为 Issue 推荐标签
+
+    基于 Issue 标题和内容，推荐合适的标签。
+
+    示例:
+      github-manager suggest-labels 123     # 为 Issue #123 推荐标签
+      github-manager suggest-labels 456     # 为 Issue #456 推荐标签
+
+    推荐的标签类型:
+      - bug: 错误、异常、崩溃
+      - enhancement: 功能增强、改进
+      - documentation: 文档相关
+      - performance: 性能优化
+      - security: 安全问题
+      - test: 测试相关
+      - refactor: 代码重构
+    """
+    console.print(f"🏷️  [bold blue]为 Issue #{issue} 推荐标签[/bold blue]\n")
+
+    manager = IssuesManager()
+
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console,
+    ) as progress:
+        task = progress.add_task("分析中...", total=None)
+        result = manager.suggest_labels_for_issue(issue)
+        progress.update(task, completed=True)
+
+    if not result:
+        console.print("❌ [red]分析失败[/red]")
+        raise typer.Exit(1)
+
+    # 显示结果
+    console.print(f"📝 [bold cyan]Issue #{result['number']}[/bold cyan]")
+    console.print(f"🔗 {result['url']}\n")
+    console.print(f"[bold]标题:[/bold] {result['title']}\n")
+
+    if result["existing_labels"]:
+        console.print(f"[bold]现有标签:[/bold] {', '.join(result['existing_labels'])}")
+    else:
+        console.print("[bold]现有标签:[/bold] [dim]无[/dim]")
+
+    if result["suggested_labels"]:
+        console.print(
+            f"\n[bold yellow]推荐标签:[/bold yellow] {', '.join(result['suggested_labels'])}"
+        )
+    else:
+        console.print("\n[bold yellow]推荐标签:[/bold yellow] [dim]无推荐[/dim]")
+
+    if result["new_labels"]:
+        console.print(f"\n[bold green]新增建议:[/bold green] {', '.join(result['new_labels'])}")
+        console.print("\n💡 可以使用以下命令添加标签:")
+        labels_str = " ".join([f"--add {label}" for label in result["new_labels"]])
+        console.print(f"   github-manager batch-label {labels_str} --label #{issue}")
+    else:
+        console.print("\n✅ [green]当前标签已完善，无需添加[/green]")
 
 
 @app.command("ai")

@@ -4,9 +4,9 @@ GitHub Issues操作执行脚本
 基于AI分析结果执行GitHub操作
 """
 
+from pathlib import Path
 import sys
 import time
-from pathlib import Path
 
 import requests
 

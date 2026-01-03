@@ -75,7 +75,7 @@ github-manager download
 
 ```bash
 # Generate and view statistics
-github-manager stats
+github-manager analytics
 
 # Output shows:
 # - Total issues count

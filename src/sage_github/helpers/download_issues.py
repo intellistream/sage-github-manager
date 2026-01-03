@@ -5,9 +5,9 @@ SAGE Issues下载工具 - 新架构版本
 """
 
 import argparse
+from datetime import datetime
 import json
 import sys
-from datetime import datetime
 
 import requests
 
@@ -539,9 +539,9 @@ class IssuesDownloader:
         closed_count = len([i for i in issues if i["state"] == "closed"])
 
         # 标签统计
-        label_stats = {}
-        milestone_stats = {}
-        team_stats = {}
+        label_stats: dict[str, int] = {}
+        milestone_stats: dict[str, int] = {}
+        team_stats: dict[str, int] = {}
 
         for issue in issues:
             # 标签统计

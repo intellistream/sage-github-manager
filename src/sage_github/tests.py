@@ -4,11 +4,11 @@ SAGE Issues 管理 - 测试套件
 基于原始test_issues_manager.sh的Python实现
 """
 
+from datetime import datetime
 import os
+from pathlib import Path
 import shutil
 import sys
-from datetime import datetime
-from pathlib import Path
 
 from rich.console import Console
 from rich.panel import Panel
@@ -275,7 +275,7 @@ class IssuesTestSuite:
 
             # 检查是否有不可接受的失败
             critical_failures = []
-            for test_name, result, error in self.test_results:
+            for test_name, result, _error in self.test_results:
                 if not result and test_name in ["配置验证", "文件操作"]:
                     critical_failures.append(test_name)
 

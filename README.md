@@ -63,7 +63,7 @@ github-manager status
 github-manager download --state all
 
 # Show statistics
-github-manager stats
+github-manager analytics
 
 # Team analysis
 github-manager team
@@ -110,7 +110,7 @@ github-manager sync --direction both
 
 ```bash
 # Show statistics
-github-manager stats
+github-manager analytics
 
 # Team analysis
 github-manager team

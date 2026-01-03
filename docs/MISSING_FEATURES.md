@@ -36,7 +36,11 @@ github-manager list --label "priority:high" --assignee shuhao
 - `src/sage_github/helpers/filter_issues.py` - Create filter helper
 - `src/sage_github/manager.py` - Add `list_issues()` method
 
-**Status**: 🔴 Not Started
+**Status**: � Completed
+
+**Implementation Date**: 2026-01-03
+
+**Notes**: Fully implemented with filtering (state, labels, assignee, milestone, author), sorting, and Rich table output.
 
 ---
 
@@ -66,7 +70,16 @@ github-manager export --state open --label bug --format markdown
 - `src/sage_github/helpers/export_issues.py` - Create export helper
 - `src/sage_github/manager.py` - Add `export_issues()` method
 
-**Status**: 🔴 Not Started
+**Status**: 🟢 Completed
+
+**Implementation Date**: 2026-01-03
+
+**Notes**: 
+- Supports CSV, JSON, and Markdown formats
+- Three Markdown templates: default (detailed list), roadmap (milestone-grouped), report (concise)
+- Full filtering support (state, labels, assignee, milestone, author)
+- Auto-adds file extension based on format
+- Shows file size and location after export
 
 ---
 
@@ -77,19 +90,19 @@ github-manager export --state open --label bug --format markdown
 **Expected Usage**:
 ```bash
 # Close issues
-github-manager batch close --label "wontfix"
-github-manager batch close --filter "state=open" --milestone "old-sprint"
+github-manager batch-close --label "wontfix"
+github-manager batch-close --state open --milestone "old-sprint"
 
 # Add/remove labels
-github-manager batch label --add "priority:high" --filter "label=bug"
-github-manager batch label --remove "needs-review" --state closed
+github-manager batch-label --add "priority:high" --label bug
+github-manager batch-label --remove "needs-review" --state closed
 
 # Assign issues
-github-manager batch assign --assignee shuhao --label "p0"
-github-manager batch assign --assignee shuhao --milestone "v2.0"
+github-manager batch-assign -a shuhao --label "p0"
+github-manager batch-assign -a shuhao --milestone "v2.0"
 
 # Update milestone
-github-manager batch milestone --set "v3.0" --label "feature"
+github-manager batch-milestone "v3.0" --label "feature"
 ```
 
 **Implementation Requirements**:
@@ -107,7 +120,19 @@ github-manager batch milestone --set "v3.0" --label "feature"
 - `src/sage_github/helpers/batch_operations.py` - Create batch operations helper
 - `src/sage_github/manager.py` - Add batch methods
 
-**Status**: 🔴 Not Started
+**Status**: � Completed
+
+**Implementation Date**: 2026-01-03
+
+**Notes**:
+- Four batch commands: batch-close, batch-label, batch-assign, batch-milestone
+- All commands support dry-run mode (--dry-run) for previewing changes
+- Confirmation prompts before executing (can skip with --yes)
+- Rich preview table showing affected issues (first 20)
+- Progress bars for operations
+- Full filtering support (state, labels, assignee, milestone, author)
+- Direct GitHub REST API integration
+- Tested with 128 SAGE open issues
 
 ---
 
@@ -143,7 +168,19 @@ github-manager ai-analyze  # Keep general analysis
 - `src/sage_github/cli.py` - Add dedicated commands
 - `src/sage_github/helpers/ai_analyzer.py` - Refactor for specific operations
 
-**Status**: 🟡 Partially Implemented (generic `ai` command exists)
+**Status**: � Completed
+
+**Implementation Date**: 2026-01-03
+
+**Notes**:
+- Three dedicated AI commands:
+  - `summarize`: Generate AI summaries for specific issues (requires OpenAI/Claude API)
+  - `detect-duplicates`: Find duplicate issues using text similarity (no API needed)
+  - `suggest-labels`: Recommend labels based on keywords (no API needed)
+- Silent mode for non-API operations
+- Rich table output for duplicates
+- Smart keyword matching for label suggestions
+- Tested with 1304 SAGE issues: 592 duplicate pairs detected at 0.8 threshold
 
 ---
 
@@ -157,7 +194,16 @@ github-manager ai-analyze  # Keep general analysis
 
 **Recommendation**: Either rename `stats` to `analytics` OR update documentation.
 
-**Status**: 🔴 Naming inconsistency exists
+**Status**: 🟢 Completed
+
+**Implementation Date**: 2026-01-03
+
+**Solution**: Renamed `stats` to `analytics`
+- Primary command: `github-manager analytics`
+- Backward compatibility: `stats` still works but shows deprecation warning
+- Updated all documentation (README, FAQ, QUICK_START, PROJECT_SUMMARY)
+- Added comprehensive docstring with examples
+- Command now hidden in help to encourage migration
 
 ---
 

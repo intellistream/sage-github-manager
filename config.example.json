@@ -1,0 +1,23 @@
+{
+  "github": {
+    "owner": "your-org",
+    "repo": "your-repo",
+    "token_env_names": [
+      "GITHUB_TOKEN",
+      "GH_TOKEN",
+      "GIT_TOKEN"
+    ]
+  },
+  "paths": {
+    "base_dir": ".github-manager",
+    "workspace": "workspace",
+    "output": "output",
+    "metadata": "metadata"
+  },
+  "settings": {
+    "sync_update_history": true,
+    "auto_backup": true,
+    "verbose_output": false
+  },
+  "expertise_rules": {}
+}

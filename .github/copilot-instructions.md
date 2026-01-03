@@ -161,27 +161,32 @@ export GITHUB_REPO=SAGE
 # Download all SAGE issues
 github-manager download
 
-# List issues with filters
+# ✅ List issues with filters (IMPLEMENTED)
 github-manager list --state open --label bug
 github-manager list --assignee shuhao
+github-manager list --milestone "v2.0" --sort created --limit 20
+github-manager list --label "priority:high" --label "bug"  # Multiple labels
 
 # Show analytics for SAGE issues
 github-manager analytics
 # Shows: issue distribution, activity trends, contributor stats
 
-# Export SAGE issues for reporting
-github-manager export --format csv --output sage_issues.csv
-github-manager export --format markdown --output ROADMAP.md
+# ✅ Export SAGE issues for reporting (IMPLEMENTED)
+github-manager export sage_issues.csv --state open
+github-manager export issues.json -f json --label bug
+github-manager export roadmap.md -f markdown --template roadmap
+github-manager export report.md -f markdown --template report --milestone "v2.0"
 
-# Batch operations on SAGE issues
-github-manager batch close --label "wontfix"
-github-manager batch label --add "priority:high" --filter "bug"
-github-manager batch assign --assignee shuhao --label "p0"
+# ✅ Batch operations on SAGE issues (IMPLEMENTED)
+github-manager batch-close --label "wontfix" --dry-run  # 预览模式
+github-manager batch-label --add "priority:high" --label "bug"
+github-manager batch-assign -a shuhao --label "p0"
+github-manager batch-milestone "v3.0" --state open
 
-# AI-powered features
-github-manager summarize --issue 123
-github-manager detect-duplicates
-github-manager suggest-labels --issue 456
+# ❌ AI-powered features (NOT YET IMPLEMENTED)
+# github-manager summarize --issue 123
+# github-manager detect-duplicates
+# github-manager suggest-labels --issue 456
 ```
 
 ### Typical Workflows
@@ -189,22 +194,22 @@ github-manager suggest-labels --issue 456
 1. **Daily Issue Triage**
    ```bash
    github-manager download  # Sync latest issues
-   github-manager list --state open --sort created --limit 20
+   github-manager list --state open --sort created --limit 20  # ✅ WORKING
    github-manager analytics  # Check issue health metrics
    ```
 
 2. **Sprint Planning**
    ```bash
-   github-manager list --milestone "v2.0" --state open
-   github-manager export --format markdown --filter milestone=v2.0
-   github-manager batch assign --milestone "v2.0"
+   github-manager list --milestone "v2.0" --state open  # ✅ WORKING
+   github-manager export sprint.md -f markdown --milestone "v2.0" --template roadmap  # ✅ WORKING
+   # github-manager batch assign --milestone "v2.0"  # ❌ NOT YET IMPLEMENTED
    ```
 
 3. **Release Preparation**
    ```bash
-   github-manager list --label "release-blocker"
-   github-manager batch label --add "resolved" --milestone "v1.5"
-   github-manager export --format csv --output release_report.csv
+   github-manager list --label "release-blocker"  # ✅ WORKING
+   github-manager export release_report.csv --state closed --milestone "v1.5"  # ✅ WORKING
+   # github-manager batch label --add "resolved" --milestone "v1.5"  # ❌ NOT YET IMPLEMENTED
    ```
 
 ## Testing & Quality

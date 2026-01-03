@@ -16,10 +16,10 @@ Issues整理脚本 - 根据关闭时间将issues移动到不同状态列
 """
 
 import argparse
-import json
-import sys
 from datetime import UTC, datetime, timedelta
+import json
 from pathlib import Path
+import sys
 
 import requests
 

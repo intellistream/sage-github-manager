@@ -169,7 +169,7 @@ jobs:
       - run: github-manager download
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - run: github-manager stats
+      - run: github-manager analytics
 ```
 
 ### Q: Can I export data to other formats?

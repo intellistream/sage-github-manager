@@ -6,10 +6,10 @@ AI 分析器（简化实现）
 """
 
 import argparse
-import re
-import sys
 from datetime import datetime
 from pathlib import Path
+import re
+import sys
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 
