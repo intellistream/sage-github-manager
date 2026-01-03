@@ -1,0 +1,84 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sage-github-manager"
+version = "0.1.0"
+description = "GitHub Issues Management Tool - Download, analyze, and manage GitHub Issues with AI"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+    { name = "IntelliStream Team", email = "shuhao_zhang@hust.edu.cn" },
+]
+keywords = [
+    "github",
+    "issues",
+    "management",
+    "ai",
+    "analytics",
+    "cli",
+    "project-management",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Software Development :: Bug Tracking",
+    "Topic :: Utilities",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "License :: OSI Approved :: MIT License",
+]
+license = {text = "MIT"}
+
+dependencies = [
+    "typer>=0.15.0,<1.0.0",
+    "rich>=13.0.0,<14.0.0",
+    "click>=8.0.0,<9.0.0",
+    "requests>=2.31.0,<3.0.0",
+    "jinja2>=3.1.0,<4.0.0",
+    "pyyaml>=6.0.0,<7.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "black>=23.0.0",
+    "isort>=5.12.0",
+    "mypy>=1.0.0",
+    "types-requests>=2.31.0",
+    "types-PyYAML>=6.0.0",
+]
+
+[project.scripts]
+github-manager = "sage_github.cli_main:main"
+gh-issues = "sage_github.cli_main:main"
+
+[project.urls]
+Homepage = "https://github.com/intellistream/sage-github-manager"
+Repository = "https://github.com/intellistream/sage-github-manager"
+Issues = "https://github.com/intellistream/sage-github-manager/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+sage_github = ["py.typed"]
+
+[tool.black]
+line-length = 100
+target-version = ['py310']
+
+[tool.isort]
+profile = "black"
+line_length = 100
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
