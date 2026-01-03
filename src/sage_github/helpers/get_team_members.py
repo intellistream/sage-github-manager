@@ -20,23 +20,12 @@ import requests
 
 # Import IssuesConfig robustly whether run as a module or as a script
 try:
-    # Preferred: absolute import via installed/available package path
-    from sage.tools.dev.issues.config import IssuesConfig as Config
-except Exception:
-    # Fallback: when executed directly, ensure the package src root is on sys.path
-    current = Path(__file__).resolve()
-    src_path = None
-    for p in current.parents:
-        # Look for a 'src' directory that contains the 'sage' package
-        if p.name == "src" and (p / "sage").exists():
-            src_path = p
-            break
-    if src_path is not None:
-        sys.path.insert(0, str(src_path))
-        from sage.tools.dev.issues.config import IssuesConfig as Config
-    else:
-        # Last resort: try relative import if package context exists
-        from ..config import IssuesConfig as Config
+    # Preferred: absolute import via installed package
+    from sage_github.config import IssuesConfig as Config
+except ImportError:
+    # Fallback: add parent directory to path
+    sys.path.insert(0, str(Path(__file__).parent.parent))
+    from config import IssuesConfig as Config
 
 
 def find_token():
