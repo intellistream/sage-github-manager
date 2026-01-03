@@ -287,6 +287,54 @@ class IssuesManager:
 
         return stats
 
+    def list_issues(
+        self,
+        state: str = "all",
+        labels: list[str] | None = None,
+        assignee: str | None = None,
+        milestone: str | None = None,
+        author: str | None = None,
+        sort_by: str = "created",
+        reverse: bool = True,
+        limit: int | None = None,
+    ) -> list[dict[str, Any]]:
+        """
+        列出和过滤Issues
+
+        Args:
+            state: 状态过滤 (all/open/closed)
+            labels: 标签过滤
+            assignee: 负责人过滤
+            milestone: 里程碑过滤
+            author: 创建者过滤
+            sort_by: 排序字段 (created/updated/comments/number)
+            reverse: 是否降序
+            limit: 限制结果数量
+
+        Returns:
+            过滤后的Issues列表
+        """
+        from sage_github.helpers.filter_issues import IssuesFilter
+
+        issues = self.load_issues()
+        if not issues:
+            return []
+
+        # 使用过滤器
+        filter_tool = IssuesFilter(issues)
+        filtered_issues = filter_tool.apply_filters(
+            state=state,
+            labels=labels,
+            assignee=assignee,
+            milestone=milestone,
+            author=author,
+            sort_by=sort_by,
+            reverse=reverse,
+            limit=limit,
+        )
+
+        return filtered_issues
+
     def show_statistics(self) -> bool:
         """显示Issues统计信息"""
         print("📊 显示Issues统计信息...")

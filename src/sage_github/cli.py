@@ -112,6 +112,130 @@ def download(
         raise typer.Exit(1)
 
 
+@app.command("list")
+def list_issues(
+    state: str = "open",
+    label: list[str] | None = None,
+    assignee: str | None = None,
+    milestone: str | None = None,
+    author: str | None = None,
+    sort: str = "created",
+    reverse: bool = True,
+    limit: int | None = None,
+    show_body: bool = False,
+):
+    """列出和过滤Issues
+
+    灵活的Issues列表和筛选功能，支持多种过滤条件组合。
+
+    示例:
+      github-manager list                                # 列出所有开放的Issues
+      github-manager list --state all                    # 列出所有Issues
+      github-manager list --label bug --state open       # 列出开放的bug
+      github-manager list --assignee shuhao              # 列出分配给shuhao的Issues
+      github-manager list --milestone "v2.0"             # 列出v2.0里程碑的Issues
+      github-manager list --sort comments --limit 10     # 列出评论最多的10个Issues
+      github-manager list --body                         # 显示Issue正文摘要
+
+    参数:
+      --state: Issue状态 (all, open, closed), 默认: open
+      --label, -l: 按标签过滤 (可多次使用)
+      --assignee, -a: 按负责人过滤
+      --milestone, -m: 按里程碑过滤
+      --author: 按创建者过滤
+      --sort: 排序字段 (created, updated, comments, number), 默认: created
+      --reverse: 降序排列, 默认: True
+      --limit, -n: 限制显示数量
+      --body, -b: 显示Issue正文摘要
+    """
+    console.print(f"📋 [bold blue]Issues列表 (状态: {state})[/bold blue]")
+
+    manager = IssuesManager()
+
+    # 获取过滤后的Issues
+    issues = manager.list_issues(
+        state=state,
+        labels=label if label else None,
+        assignee=assignee,
+        milestone=milestone,
+        author=author,
+        sort_by=sort,
+        reverse=reverse,
+        limit=limit,
+    )
+
+    if not issues:
+        console.print("📭 [yellow]没有找到符合条件的Issues[/yellow]")
+        return
+
+    # 创建表格显示
+    table = Table(title=f"找到 {len(issues)} 个Issues")
+    table.add_column("#", style="cyan", width=6)
+    table.add_column("标题", style="white", no_wrap=False)
+    table.add_column("状态", style="green", width=8)
+    table.add_column("标签", style="yellow", width=20)
+    table.add_column("负责人", style="blue", width=12)
+
+    if show_body:
+        table.add_column("摘要", style="dim", width=30)
+
+    for issue in issues:
+        # 提取数据
+        number = str(issue.get("number", "N/A"))
+        title = issue.get("title", "未知")[:60]
+        state_value = issue.get("state", "open")
+        state_emoji = "🟢" if state_value == "open" else "🔴"
+
+        # 标签
+        labels = issue.get("labels", [])
+        label_names = [label["name"] if isinstance(label, dict) else label for label in labels]
+        labels_str = ", ".join(label_names[:3])  # 最多显示3个标签
+        if len(label_names) > 3:
+            labels_str += "..."
+
+        # 负责人
+        assignees = issue.get("assignees", [])
+        assignee_names = [a["login"] if isinstance(a, dict) else a for a in assignees]
+        assignees_str = ", ".join(assignee_names[:2]) if assignees else "未分配"
+        if len(assignee_names) > 2:
+            assignees_str += "..."
+
+        row = [
+            number,
+            title,
+            f"{state_emoji} {state_value}",
+            labels_str or "-",
+            assignees_str,
+        ]
+
+        if show_body:
+            body = issue.get("body", "")
+            summary = body[:50].replace("\n", " ") if body else "-"
+            if len(body) > 50:
+                summary += "..."
+            row.append(summary)
+
+        table.add_row(*row)
+
+    console.print(table)
+
+    # 显示过滤条件摘要
+    filters_applied = []
+    if state != "all":
+        filters_applied.append(f"状态={state}")
+    if label:
+        filters_applied.append(f"标签={', '.join(label)}")
+    if assignee is not None:
+        filters_applied.append(f"负责人={assignee or '未分配'}")
+    if milestone is not None:
+        filters_applied.append(f"里程碑={milestone or '无'}")
+    if author:
+        filters_applied.append(f"创建者={author}")
+
+    if filters_applied:
+        console.print(f"\n🔍 过滤条件: {' | '.join(filters_applied)}")
+
+
 @app.command("stats")
 def statistics():
     """显示Issues统计信息"""
