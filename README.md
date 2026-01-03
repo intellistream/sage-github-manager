@@ -14,18 +14,44 @@
 
 ## Installation
 
-### From PyPI (coming soon)
+### Quick Install (Recommended)
 
-```bash
-pip install sage-github-manager
-```
-
-### From Source
+Run the automated installation script:
 
 ```bash
 git clone https://github.com/intellistream/sage-github-manager.git
 cd sage-github-manager
-pip install -e .
+bash quickstart.sh
+```
+
+The script will:
+- ✓ Check Python 3.10+ installation
+- ✓ Install package and dependencies
+- ✓ Set up virtual environment (optional)
+- ✓ Configure GitHub credentials
+- ✓ Install pre-commit hooks
+- ✓ Verify installation
+
+### Manual Installation
+
+```bash
+# Clone repository
+git clone https://github.com/intellistream/sage-github-manager.git
+cd sage-github-manager
+
+# Install with dev dependencies
+pip install -e ".[dev]"
+
+# Set up environment variables
+export GITHUB_TOKEN="your_github_token"
+export GITHUB_OWNER="intellistream"
+export GITHUB_REPO="SAGE"
+```
+
+### From PyPI (coming soon)
+
+```bash
+pip install sage-github-manager
 ```
 
 ## Quick Start
