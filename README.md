@@ -445,13 +445,13 @@ github-manager organize --apply --confirm
 
 ## Environment Variables
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `GITHUB_TOKEN` | GitHub Personal Access Token | (required) |
-| `GH_TOKEN` | Alternative name for GitHub token | - |
-| `GIT_TOKEN` | Alternative name for GitHub token | - |
-| `GITHUB_OWNER` | Repository owner/organization | intellistream |
-| `GITHUB_REPO` | Repository name | SAGE |
+| Variable       | Description                       | Default       |
+| -------------- | --------------------------------- | ------------- |
+| `GITHUB_TOKEN` | GitHub Personal Access Token      | (required)    |
+| `GH_TOKEN`     | Alternative name for GitHub token | -             |
+| `GIT_TOKEN`    | Alternative name for GitHub token | -             |
+| `GITHUB_OWNER` | Repository owner/organization     | intellistream |
+| `GITHUB_REPO`  | Repository name                   | SAGE          |
 
 ## Development
 
