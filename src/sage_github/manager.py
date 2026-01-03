@@ -622,6 +622,114 @@ class IssuesManager:
             issues, milestone, dry_run=dry_run, auto_confirm=auto_confirm
         )
 
+    def summarize_issue(
+        self, issue_number: int, api_provider: str = "openai", max_length: int = 200
+    ) -> dict[str, Any] | None:
+        """生成 Issue 摘要
+
+        Args:
+            issue_number: Issue 编号
+            api_provider: API 提供商 (openai/claude)
+            max_length: 最大摘要长度
+
+        Returns:
+            包含摘要的字典，如果失败返回 None
+        """
+        from sage_github.helpers.ai_helper import AIHelper
+
+        # 加载 Issues
+        issues = self.load_issues()
+        issue = next((i for i in issues if i.get("number") == issue_number), None)
+
+        if not issue:
+            print(f"❌ 未找到 Issue #{issue_number}")
+            return None
+
+        # 生成摘要
+        ai = AIHelper(api_provider=api_provider)
+        summary = ai.summarize_issue(issue, max_length=max_length)
+
+        if summary:
+            return {
+                "number": issue_number,
+                "title": issue.get("title"),
+                "summary": summary,
+                "url": issue.get("html_url"),
+            }
+
+        return None
+
+    def detect_duplicates(self, threshold: float = 0.7) -> list[dict[str, Any]]:
+        """检测重复的 Issues
+
+        Args:
+            threshold: 相似度阈值 (0-1)
+
+        Returns:
+            重复对列表
+        """
+        from sage_github.helpers.ai_helper import AIHelper
+
+        issues = self.load_issues()
+        if not issues:
+            print("❌ 没有可用的 Issues")
+            return []
+
+        ai = AIHelper(silent=True)  # 不需要 API，使用静默模式
+        duplicates = ai.detect_duplicates(issues, threshold=threshold)
+
+        results = []
+        for issue1, issue2, similarity in duplicates:
+            results.append(
+                {
+                    "issue1": {
+                        "number": issue1.get("number"),
+                        "title": issue1.get("title"),
+                        "url": issue1.get("html_url"),
+                    },
+                    "issue2": {
+                        "number": issue2.get("number"),
+                        "title": issue2.get("title"),
+                        "url": issue2.get("html_url"),
+                    },
+                    "similarity": round(similarity, 2),
+                }
+            )
+
+        return results
+
+    def suggest_labels_for_issue(self, issue_number: int) -> dict[str, Any] | None:
+        """为 Issue 推荐标签
+
+        Args:
+            issue_number: Issue 编号
+
+        Returns:
+            包含推荐标签的字典，如果失败返回 None
+        """
+        from sage_github.helpers.ai_helper import AIHelper
+
+        issues = self.load_issues()
+        issue = next((i for i in issues if i.get("number") == issue_number), None)
+
+        if not issue:
+            print(f"❌ 未找到 Issue #{issue_number}")
+            return None
+
+        ai = AIHelper(silent=True)  # 标签建议不需要 API
+        suggested = ai.suggest_labels(issue)
+
+        existing_labels = [label.get("name") for label in issue.get("labels", [])]
+
+        return {
+            "number": issue_number,
+            "title": issue.get("title"),
+            "existing_labels": existing_labels,
+            "suggested_labels": suggested,
+            "new_labels": [label for label in suggested if label not in existing_labels],
+            "url": issue.get("html_url"),
+        }
+
     def show_statistics(self) -> bool:
         """显示Issues统计信息"""
         print("📊 显示Issues统计信息...")

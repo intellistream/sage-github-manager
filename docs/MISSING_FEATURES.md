@@ -168,7 +168,19 @@ github-manager ai-analyze  # Keep general analysis
 - `src/sage_github/cli.py` - Add dedicated commands
 - `src/sage_github/helpers/ai_analyzer.py` - Refactor for specific operations
 
-**Status**: 🟡 Partially Implemented (generic `ai` command exists)
+**Status**: � Completed
+
+**Implementation Date**: 2026-01-03
+
+**Notes**:
+- Three dedicated AI commands:
+  - `summarize`: Generate AI summaries for specific issues (requires OpenAI/Claude API)
+  - `detect-duplicates`: Find duplicate issues using text similarity (no API needed)
+  - `suggest-labels`: Recommend labels based on keywords (no API needed)
+- Silent mode for non-API operations
+- Rich table output for duplicates
+- Smart keyword matching for label suggestions
+- Tested with 1304 SAGE issues: 592 duplicate pairs detected at 0.8 threshold
 
 ---
 
@@ -182,7 +194,16 @@ github-manager ai-analyze  # Keep general analysis
 
 **Recommendation**: Either rename `stats` to `analytics` OR update documentation.
 
-**Status**: 🔴 Naming inconsistency exists
+**Status**: 🟢 Completed
+
+**Implementation Date**: 2026-01-03
+
+**Solution**: Renamed `stats` to `analytics`
+- Primary command: `github-manager analytics`
+- Backward compatibility: `stats` still works but shows deprecation warning
+- Updated all documentation (README, FAQ, QUICK_START, PROJECT_SUMMARY)
+- Added comprehensive docstring with examples
+- Command now hidden in help to encourage migration
 
 ---
 

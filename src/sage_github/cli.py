@@ -518,9 +518,20 @@ def batch_milestone(
         raise typer.Exit(1)
 
 
-@app.command("stats")
-def statistics():
-    """显示Issues统计信息"""
+@app.command("analytics")
+def analytics():
+    """显示Issues统计与分析
+
+    生成详细的Issues统计报告，包括：
+    - Issue状态分布（开放/关闭）
+    - 标签使用统计
+    - 负责人分配情况
+    - 里程碑进度
+    - 活跃度趋势
+
+    示例:
+      github-manager analytics    # 生成完整统计报告
+    """
     console.print("📊 [bold blue]Issues统计分析[/bold blue]")
 
     manager = IssuesManager()
@@ -538,6 +549,14 @@ def statistics():
         console.print("❌ [red]统计失败 - 请先下载Issues[/red]")
         console.print("💡 运行: github-manager download")
         raise typer.Exit(1)
+
+
+# 保留 stats 作为 analytics 的别名，用于向后兼容
+@app.command("stats", hidden=True)
+def statistics():
+    """显示Issues统计信息（已弃用，请使用 analytics）"""
+    console.print("⚠️  [yellow]'stats' 命令已弃用，请使用 'analytics'[/yellow]")
+    analytics()
 
 
 @app.command("team")
@@ -634,6 +653,178 @@ def show_config():
     console.print(f"  • 同步更新历史: {getattr(config, 'sync_update_history', True)}")
     console.print(f"  • 自动备份: {getattr(config, 'auto_backup', True)}")
     console.print(f"  • 详细输出: {getattr(config, 'verbose_output', False)}")
+
+
+@app.command("summarize")
+def summarize_issue(
+    issue: int = typer.Argument(..., help="Issue 编号"),
+    provider: str = typer.Option("openai", "--provider", "-p", help="AI 提供商: openai, claude"),
+    max_length: int = typer.Option(200, "--max-length", help="最大摘要长度"),
+):
+    """生成 Issue 的 AI 摘要
+
+    使用 AI 生成简洁的 Issue 摘要，帮助快速理解问题核心。
+
+    示例:
+      github-manager summarize 123                    # 使用 OpenAI 生成摘要
+      github-manager summarize 456 -p claude          # 使用 Claude 生成摘要
+      github-manager summarize 789 --max-length 300   # 自定义摘要长度
+
+    需要设置环境变量:
+      export OPENAI_API_KEY=sk-...       # 使用 OpenAI
+      export ANTHROPIC_API_KEY=sk-ant-...  # 使用 Claude
+    """
+    console.print(f"🤖 [bold blue]生成 Issue #{issue} 的 AI 摘要[/bold blue]\n")
+
+    manager = IssuesManager()
+
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console,
+    ) as progress:
+        task = progress.add_task("生成摘要中...", total=None)
+        result = manager.summarize_issue(issue, api_provider=provider, max_length=max_length)
+        progress.update(task, completed=True)
+
+    if not result:
+        console.print("❌ [red]生成摘要失败[/red]")
+        raise typer.Exit(1)
+
+    # 显示结果
+    console.print(f"📝 [bold cyan]Issue #{result['number']}[/bold cyan]")
+    console.print(f"🔗 {result['url']}\n")
+    console.print(f"[bold]标题:[/bold] {result['title']}\n")
+    console.print("[bold yellow]AI 摘要:[/bold yellow]")
+    console.print(f"[green]{result['summary']}[/green]")
+
+
+@app.command("detect-duplicates")
+def detect_duplicates(
+    threshold: float = typer.Option(0.7, "--threshold", "-t", help="相似度阈值 (0-1)"),
+    limit: int = typer.Option(20, "--limit", "-n", help="显示结果数量"),
+):
+    """检测重复的 Issues
+
+    基于标题和内容的文本相似度检测可能重复的 Issues。
+
+    示例:
+      github-manager detect-duplicates                  # 使用默认阈值 0.7
+      github-manager detect-duplicates -t 0.8           # 使用更严格的阈值
+      github-manager detect-duplicates -t 0.6 -n 50     # 显示更多结果
+
+    提示:
+      - 阈值越高，匹配越严格（更少误报）
+      - 阈值越低，匹配越宽松（可能更多误报）
+      - 推荐范围: 0.6 - 0.8
+    """
+    console.print(f"🔍 [bold blue]检测重复 Issues (阈值: {threshold})[/bold blue]\n")
+
+    manager = IssuesManager()
+
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console,
+    ) as progress:
+        task = progress.add_task("分析中...", total=None)
+        duplicates = manager.detect_duplicates(threshold=threshold)
+        progress.update(task, completed=True)
+
+    if not duplicates:
+        console.print("✅ [green]未发现重复的 Issues[/green]")
+        return
+
+    # 显示结果
+    console.print(f"📊 [yellow]发现 {len(duplicates)} 对可能重复的 Issues[/yellow]\n")
+
+    table = Table(title="重复 Issues")
+    table.add_column("Issue 1", style="cyan")
+    table.add_column("Issue 2", style="cyan")
+    table.add_column("相似度", style="yellow", justify="right")
+
+    for dup in duplicates[:limit]:
+        issue1 = dup["issue1"]
+        issue2 = dup["issue2"]
+        similarity = dup["similarity"]
+
+        title1 = issue1["title"][:40] + "..." if len(issue1["title"]) > 40 else issue1["title"]
+        title2 = issue2["title"][:40] + "..." if len(issue2["title"]) > 40 else issue2["title"]
+
+        table.add_row(
+            f"#{issue1['number']}: {title1}",
+            f"#{issue2['number']}: {title2}",
+            f"{similarity:.1%}",
+        )
+
+    console.print(table)
+
+    if len(duplicates) > limit:
+        console.print(f"\n💡 还有 {len(duplicates) - limit} 对结果，使用 --limit 查看更多")
+
+
+@app.command("suggest-labels")
+def suggest_labels(
+    issue: int = typer.Argument(..., help="Issue 编号"),
+):
+    """为 Issue 推荐标签
+
+    基于 Issue 标题和内容，推荐合适的标签。
+
+    示例:
+      github-manager suggest-labels 123     # 为 Issue #123 推荐标签
+      github-manager suggest-labels 456     # 为 Issue #456 推荐标签
+
+    推荐的标签类型:
+      - bug: 错误、异常、崩溃
+      - enhancement: 功能增强、改进
+      - documentation: 文档相关
+      - performance: 性能优化
+      - security: 安全问题
+      - test: 测试相关
+      - refactor: 代码重构
+    """
+    console.print(f"🏷️  [bold blue]为 Issue #{issue} 推荐标签[/bold blue]\n")
+
+    manager = IssuesManager()
+
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console,
+    ) as progress:
+        task = progress.add_task("分析中...", total=None)
+        result = manager.suggest_labels_for_issue(issue)
+        progress.update(task, completed=True)
+
+    if not result:
+        console.print("❌ [red]分析失败[/red]")
+        raise typer.Exit(1)
+
+    # 显示结果
+    console.print(f"📝 [bold cyan]Issue #{result['number']}[/bold cyan]")
+    console.print(f"🔗 {result['url']}\n")
+    console.print(f"[bold]标题:[/bold] {result['title']}\n")
+
+    if result["existing_labels"]:
+        console.print(f"[bold]现有标签:[/bold] {', '.join(result['existing_labels'])}")
+    else:
+        console.print("[bold]现有标签:[/bold] [dim]无[/dim]")
+
+    if result["suggested_labels"]:
+        console.print(
+            f"\n[bold yellow]推荐标签:[/bold yellow] {', '.join(result['suggested_labels'])}"
+        )
+    else:
+        console.print("\n[bold yellow]推荐标签:[/bold yellow] [dim]无推荐[/dim]")
+
+    if result["new_labels"]:
+        console.print(f"\n[bold green]新增建议:[/bold green] {', '.join(result['new_labels'])}")
+        console.print("\n💡 可以使用以下命令添加标签:")
+        labels_str = " ".join([f"--add {label}" for label in result["new_labels"]])
+        console.print(f"   github-manager batch-label {labels_str} --label #{issue}")
+    else:
+        console.print("\n✅ [green]当前标签已完善，无需添加[/green]")
 
 
 @app.command("ai")
