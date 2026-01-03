@@ -11,10 +11,10 @@ Creates in `output/`:
 Token resolution order: GITHUB_TOKEN env var -> .github_token file searched upward from repo -> user's home .github_token
 """
 
-import json
-import sys
 from datetime import datetime
+import json
 from pathlib import Path
+import sys
 
 import requests
 
@@ -146,7 +146,7 @@ class TeamMembersCollector:
         usernames_file = self.meta_dir / "team_usernames.txt"
         lines = [f"# generated: {datetime.now().isoformat()}"]
         all_usernames = set()
-        for slug, info in teams_data.items():
+        for _slug, info in teams_data.items():
             lines.append(f"\n## {info.get('name')}")
             for m in info.get("members", []):
                 username = m.get("username")

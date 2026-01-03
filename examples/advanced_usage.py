@@ -21,7 +21,7 @@ def main():
         project_root=custom_root, github_owner="your-org", github_repo="your-repo"
     )
 
-    print(f"\n⚙️ Custom Configuration:")
+    print("\n⚙️ Custom Configuration:")
     print(f"  Project Root: {config.project_root}")
     print(f"  Base Directory: {config.base_dir}")
     print(f"  Workspace: {config.workspace_path}")

@@ -10,7 +10,7 @@ def main():
     """Main CLI entry point"""
     try:
         from sage_github.cli import app
-        
+
         # Run the Typer app
         app()
     except KeyboardInterrupt:

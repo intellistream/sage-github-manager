@@ -19,9 +19,14 @@ class IssuesConfig:
     GITHUB_REPO = os.getenv("GITHUB_REPO", "SAGE")
 
     # 专业领域匹配规则 - 可自定义
-    EXPERTISE_RULES = {}
+    EXPERTISE_RULES: dict[str, str] = {}
 
-    def __init__(self, project_root: Path | None = None, github_owner: str | None = None, github_repo: str | None = None):
+    def __init__(
+        self,
+        project_root: Path | None = None,
+        github_owner: str | None = None,
+        github_repo: str | None = None,
+    ):
         # 如果提供了owner和repo参数，使用它们
         if github_owner:
             self.GITHUB_OWNER = github_owner

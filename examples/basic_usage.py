@@ -17,7 +17,7 @@ def main():
         github_repo="SAGE",  # Change to your repository
     )
 
-    print(f"\n📋 Configuration:")
+    print("\n📋 Configuration:")
     print(f"  Repository: {config.GITHUB_OWNER}/{config.GITHUB_REPO}")
     print(f"  Project Root: {config.project_root}")
     print(f"  Workspace: {config.workspace_path}")
@@ -29,7 +29,7 @@ def main():
 
         # Get repository info
         repo_info = config.get_repo_info()
-        print(f"\n📊 Repository Info:")
+        print("\n📊 Repository Info:")
         print(f"  Full Name: {repo_info['full_name']}")
         print(f"  Description: {repo_info.get('description', 'N/A')}")
         print(f"  Stars: {repo_info['stargazers_count']}")

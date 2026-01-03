@@ -20,15 +20,15 @@ Issues 统一同步脚本 - 支持所有属性的同步
 """
 
 import argparse
+from datetime import datetime
 import json
+from pathlib import Path
 import re
 import sys
 import time
-from datetime import datetime
-from pathlib import Path
 
-import requests
 from github_helper import GitHubProjectManager
+import requests
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(SCRIPT_DIR.parent))  # Add parent directory to path
@@ -42,9 +42,8 @@ try:
 except ImportError:
     # 如果相对导入失败，使用绝对导入
     sys.path.insert(0, str(SCRIPT_DIR.parent))
-    from issue_data_manager import IssueDataManager
-
     from config import IssuesConfig
+    from issue_data_manager import IssueDataManager
 
 # Import github_helper directly
 sys.path.insert(0, str(SCRIPT_DIR))

@@ -24,9 +24,9 @@ Issues错误分配修复执行脚本
 """
 
 import json
+from pathlib import Path
 import sys
 import time
-from pathlib import Path
 
 from github_helper import GitHubProjectManager
 

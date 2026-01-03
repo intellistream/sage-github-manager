@@ -5,12 +5,12 @@ Lightweight manager that uses the centralized config
 and calls helper scripts from helpers/ when available.
 """
 
+from datetime import datetime
 import json
 import os
+from pathlib import Path
 import subprocess
 import sys
-from datetime import datetime
-from pathlib import Path
 from typing import Any
 
 from .config import IssuesConfig

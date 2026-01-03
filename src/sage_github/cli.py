@@ -4,14 +4,14 @@ GitHub Issues Manager命令 - CLI接口
 """
 
 import os
+from pathlib import Path
 import subprocess
 import sys
-from pathlib import Path
 
-import typer
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
+import typer
 
 from sage_github import IssuesConfig, IssuesManager
 from sage_github.helpers import IssuesDownloader

@@ -1,6 +1,7 @@
 """Basic tests for GitHub Issues Manager"""
 
 import pytest
+
 from sage_github import IssuesConfig, IssuesManager
 
 
