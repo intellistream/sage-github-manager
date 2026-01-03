@@ -327,6 +327,197 @@ def export_issues(
         console.print(f"\n🔍 应用的过滤条件: {' | '.join(filters_applied)}")
 
 
+@app.command("batch-close")
+def batch_close(
+    state: str = typer.Option("open", help="Issue状态: all, open, closed"),
+    label: list[str] = typer.Option([], "--label", "-l", help="按标签过滤"),
+    assignee: str | None = typer.Option(None, "--assignee", "-a", help="按负责人过滤"),
+    milestone: str | None = typer.Option(None, "--milestone", "-m", help="按里程碑过滤"),
+    author: str | None = typer.Option(None, "--author", help="按创建者过滤"),
+    dry_run: bool = typer.Option(False, "--dry-run", help="预览模式（不实际执行）"),
+    yes: bool = typer.Option(False, "--yes", "-y", help="跳过确认提示"),
+):
+    """批量关闭Issues
+
+    根据过滤条件批量关闭匹配的Issues。
+
+    示例:
+      github-manager batch-close --label wontfix                  # 关闭所有wontfix标签的Issues
+      github-manager batch-close --state open --milestone "v1.0"  # 关闭v1.0里程碑的所有打开Issues
+      github-manager batch-close --dry-run --label bug           # 预览要关闭的bug Issues
+      github-manager batch-close --assignee shuhao --yes         # 无需确认关闭shuhao的Issues
+
+    ⚠️  危险操作: 批量关闭Issues无法撤销，建议先使用 --dry-run 预览
+    """
+    console.print("🔒 [bold red]批量关闭Issues[/bold red]")
+
+    manager = IssuesManager()
+
+    result = manager.batch_close(
+        state=state,
+        labels=label if label else None,
+        assignee=assignee,
+        milestone=milestone,
+        author=author,
+        dry_run=dry_run,
+        auto_confirm=yes,
+    )
+
+    if result["skipped"] == result["total"] and not dry_run:
+        raise typer.Exit(1)
+
+
+@app.command("batch-label")
+def batch_label(
+    add: list[str] = typer.Option([], "--add", help="要添加的标签"),
+    remove: list[str] = typer.Option([], "--remove", help="要移除的标签"),
+    state: str = typer.Option("all", help="Issue状态: all, open, closed"),
+    label: list[str] = typer.Option([], "--label", "-l", help="按标签过滤"),
+    assignee: str | None = typer.Option(None, "--assignee", "-a", help="按负责人过滤"),
+    milestone: str | None = typer.Option(None, "--milestone", "-m", help="按里程碑过滤"),
+    author: str | None = typer.Option(None, "--author", help="按创建者过滤"),
+    dry_run: bool = typer.Option(False, "--dry-run", help="预览模式（不实际执行）"),
+    yes: bool = typer.Option(False, "--yes", "-y", help="跳过确认提示"),
+):
+    """批量管理标签
+
+    根据过滤条件批量添加或移除标签。
+
+    示例:
+      github-manager batch-label --add "priority:high" --label bug        # 为所有bug添加高优先级
+      github-manager batch-label --remove "needs-review" --state closed   # 从已关闭Issues移除待审核标签
+      github-manager batch-label --add "v2.0" --milestone "v2.0"          # 为v2.0里程碑添加标签
+      github-manager batch-label --add "urgent" --assignee shuhao --yes  # 无需确认添加urgent标签
+
+    💡 提示: 可以同时使用 --add 和 --remove 来执行多个操作
+    """
+    if not add and not remove:
+        console.print("❌ [red]请指定要添加（--add）或移除（--remove）的标签[/red]")
+        raise typer.Exit(1)
+
+    manager = IssuesManager()
+
+    # 执行添加标签
+    if add:
+        console.print(f"🏷️  [bold blue]批量添加标签: {', '.join(add)}[/bold blue]")
+        result_add = manager.batch_add_labels(
+            add_labels=add,
+            state=state,
+            labels=label if label else None,
+            assignee=assignee,
+            milestone=milestone,
+            author=author,
+            dry_run=dry_run,
+            auto_confirm=yes,
+        )
+        if result_add["skipped"] == result_add["total"] and not dry_run:
+            raise typer.Exit(1)
+
+    # 执行移除标签
+    if remove:
+        console.print(f"🏷️  [bold blue]批量移除标签: {', '.join(remove)}[/bold blue]")
+        result_remove = manager.batch_remove_labels(
+            remove_labels=remove,
+            state=state,
+            labels=label if label else None,
+            assignee=assignee,
+            milestone=milestone,
+            author=author,
+            dry_run=dry_run,
+            auto_confirm=yes,
+        )
+        if result_remove["skipped"] == result_remove["total"] and not dry_run:
+            raise typer.Exit(1)
+
+
+@app.command("batch-assign")
+def batch_assign(
+    assignee: list[str] = typer.Option([], "--assignee", "-a", help="负责人（可多个）"),
+    state: str = typer.Option("all", help="Issue状态: all, open, closed"),
+    label: list[str] = typer.Option([], "--label", "-l", help="按标签过滤"),
+    milestone: str | None = typer.Option(None, "--milestone", "-m", help="按里程碑过滤"),
+    author: str | None = typer.Option(None, "--author", help="按创建者过滤"),
+    dry_run: bool = typer.Option(False, "--dry-run", help="预览模式（不实际执行）"),
+    yes: bool = typer.Option(False, "--yes", "-y", help="跳过确认提示"),
+):
+    """批量分配Issues
+
+    根据过滤条件批量分配Issues给指定负责人。
+
+    示例:
+      github-manager batch-assign -a shuhao --label "priority:high"    # 分配高优先级Issues
+      github-manager batch-assign -a alice -a bob --milestone "v2.0"   # 分配给多人
+      github-manager batch-assign -a shuhao --state open --dry-run     # 预览分配
+      github-manager batch-assign -a team-lead --label bug --yes       # 无需确认分配bugs
+
+    💡 提示: 使用多个 -a 可以分配给多个负责人
+    """
+    if not assignee:
+        console.print("❌ [red]请指定负责人（--assignee 或 -a）[/red]")
+        raise typer.Exit(1)
+
+    console.print(f"👥 [bold blue]批量分配给: {', '.join(assignee)}[/bold blue]")
+
+    manager = IssuesManager()
+
+    result = manager.batch_assign(
+        assignees=assignee,
+        state=state,
+        labels=label if label else None,
+        milestone=milestone,
+        author=author,
+        dry_run=dry_run,
+        auto_confirm=yes,
+    )
+
+    if result["skipped"] == result["total"] and not dry_run:
+        raise typer.Exit(1)
+
+
+@app.command("batch-milestone")
+def batch_milestone(
+    milestone: str = typer.Argument(..., help="要设置的里程碑名称"),
+    state: str = typer.Option("all", help="Issue状态: all, open, closed"),
+    label: list[str] = typer.Option([], "--label", "-l", help="按标签过滤"),
+    assignee: str | None = typer.Option(None, "--assignee", "-a", help="按负责人过滤"),
+    current_milestone: str | None = typer.Option(
+        None, "--current-milestone", help="按当前里程碑过滤"
+    ),
+    author: str | None = typer.Option(None, "--author", help="按创建者过滤"),
+    dry_run: bool = typer.Option(False, "--dry-run", help="预览模式（不实际执行）"),
+    yes: bool = typer.Option(False, "--yes", "-y", help="跳过确认提示"),
+):
+    """批量设置里程碑
+
+    根据过滤条件批量设置Issues的里程碑。
+
+    示例:
+      github-manager batch-milestone "v2.0" --label feature           # 将所有feature设置到v2.0
+      github-manager batch-milestone "v3.0" --current-milestone "v2.0" # 将v2.0迁移到v3.0
+      github-manager batch-milestone "Sprint 5" --state open --dry-run # 预览设置
+      github-manager batch-milestone "Q1-2026" --assignee shuhao --yes # 无需确认设置
+
+    💡 提示: 使用 --current-milestone 可以批量迁移里程碑
+    """
+    console.print(f"🎯 [bold blue]批量设置里程碑: {milestone}[/bold blue]")
+
+    manager = IssuesManager()
+
+    result = manager.batch_set_milestone(
+        milestone=milestone,
+        state=state,
+        labels=label if label else None,
+        assignee=assignee,
+        milestone_filter=current_milestone,
+        author=author,
+        dry_run=dry_run,
+        auto_confirm=yes,
+    )
+
+    if result["skipped"] == result["total"] and not dry_run:
+        raise typer.Exit(1)
+
+
 @app.command("stats")
 def statistics():
     """显示Issues统计信息"""

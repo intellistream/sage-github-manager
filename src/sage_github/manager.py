@@ -401,6 +401,227 @@ class IssuesManager:
             print(f"📊 导出了 {len(issues)} 个Issues")
         return success
 
+    def batch_close(
+        self,
+        state: str = "all",
+        labels: list[str] | None = None,
+        assignee: str | None = None,
+        milestone: str | None = None,
+        author: str | None = None,
+        dry_run: bool = False,
+        auto_confirm: bool = False,
+    ) -> dict[str, Any]:
+        """批量关闭Issues
+
+        Args:
+            state: 状态过滤
+            labels: 标签过滤
+            assignee: 负责人过滤
+            milestone: 里程碑过滤
+            author: 创建者过滤
+            dry_run: 是否为预览模式
+            auto_confirm: 是否自动确认
+
+        Returns:
+            操作结果统计
+        """
+        from sage_github.helpers.batch_operations import BatchOperations
+
+        # 获取匹配的Issues
+        issues = self.list_issues(
+            state=state,
+            labels=labels,
+            assignee=assignee,
+            milestone=milestone,
+            author=author,
+        )
+
+        # 执行批量关闭
+        batch_ops = BatchOperations(
+            owner=self.config.GITHUB_OWNER,
+            repo=self.config.GITHUB_REPO,
+            token=self.config.github_token,
+        )
+        return batch_ops.close_issues(issues, dry_run=dry_run, auto_confirm=auto_confirm)
+
+    def batch_add_labels(
+        self,
+        add_labels: list[str],
+        state: str = "all",
+        labels: list[str] | None = None,
+        assignee: str | None = None,
+        milestone: str | None = None,
+        author: str | None = None,
+        dry_run: bool = False,
+        auto_confirm: bool = False,
+    ) -> dict[str, Any]:
+        """批量添加标签
+
+        Args:
+            add_labels: 要添加的标签列表
+            state: 状态过滤
+            labels: 标签过滤
+            assignee: 负责人过滤
+            milestone: 里程碑过滤
+            author: 创建者过滤
+            dry_run: 是否为预览模式
+            auto_confirm: 是否自动确认
+
+        Returns:
+            操作结果统计
+        """
+        from sage_github.helpers.batch_operations import BatchOperations
+
+        issues = self.list_issues(
+            state=state,
+            labels=labels,
+            assignee=assignee,
+            milestone=milestone,
+            author=author,
+        )
+
+        batch_ops = BatchOperations(
+            owner=self.config.GITHUB_OWNER,
+            repo=self.config.GITHUB_REPO,
+            token=self.config.github_token,
+        )
+        return batch_ops.add_labels(issues, add_labels, dry_run=dry_run, auto_confirm=auto_confirm)
+
+    def batch_remove_labels(
+        self,
+        remove_labels: list[str],
+        state: str = "all",
+        labels: list[str] | None = None,
+        assignee: str | None = None,
+        milestone: str | None = None,
+        author: str | None = None,
+        dry_run: bool = False,
+        auto_confirm: bool = False,
+    ) -> dict[str, Any]:
+        """批量移除标签
+
+        Args:
+            remove_labels: 要移除的标签列表
+            state: 状态过滤
+            labels: 标签过滤
+            assignee: 负责人过滤
+            milestone: 里程碑过滤
+            author: 创建者过滤
+            dry_run: 是否为预览模式
+            auto_confirm: 是否自动确认
+
+        Returns:
+            操作结果统计
+        """
+        from sage_github.helpers.batch_operations import BatchOperations
+
+        issues = self.list_issues(
+            state=state,
+            labels=labels,
+            assignee=assignee,
+            milestone=milestone,
+            author=author,
+        )
+
+        batch_ops = BatchOperations(
+            owner=self.config.GITHUB_OWNER,
+            repo=self.config.GITHUB_REPO,
+            token=self.config.github_token,
+        )
+        return batch_ops.remove_labels(
+            issues, remove_labels, dry_run=dry_run, auto_confirm=auto_confirm
+        )
+
+    def batch_assign(
+        self,
+        assignees: list[str],
+        state: str = "all",
+        labels: list[str] | None = None,
+        assignee: str | None = None,
+        milestone: str | None = None,
+        author: str | None = None,
+        dry_run: bool = False,
+        auto_confirm: bool = False,
+    ) -> dict[str, Any]:
+        """批量分配Issues
+
+        Args:
+            assignees: 负责人列表
+            state: 状态过滤
+            labels: 标签过滤
+            assignee: 负责人过滤
+            milestone: 里程碑过滤
+            author: 创建者过滤
+            dry_run: 是否为预览模式
+            auto_confirm: 是否自动确认
+
+        Returns:
+            操作结果统计
+        """
+        from sage_github.helpers.batch_operations import BatchOperations
+
+        issues = self.list_issues(
+            state=state,
+            labels=labels,
+            assignee=assignee,
+            milestone=milestone,
+            author=author,
+        )
+
+        batch_ops = BatchOperations(
+            owner=self.config.GITHUB_OWNER,
+            repo=self.config.GITHUB_REPO,
+            token=self.config.github_token,
+        )
+        return batch_ops.assign_issues(
+            issues, assignees, dry_run=dry_run, auto_confirm=auto_confirm
+        )
+
+    def batch_set_milestone(
+        self,
+        milestone: str,
+        state: str = "all",
+        labels: list[str] | None = None,
+        assignee: str | None = None,
+        milestone_filter: str | None = None,
+        author: str | None = None,
+        dry_run: bool = False,
+        auto_confirm: bool = False,
+    ) -> dict[str, Any]:
+        """批量设置里程碑
+
+        Args:
+            milestone: 要设置的里程碑
+            state: 状态过滤
+            labels: 标签过滤
+            assignee: 负责人过滤
+            milestone_filter: 里程碑过滤
+            author: 创建者过滤
+            dry_run: 是否为预览模式
+            auto_confirm: 是否自动确认
+
+        Returns:
+            操作结果统计
+        """
+        from sage_github.helpers.batch_operations import BatchOperations
+
+        issues = self.list_issues(
+            state=state,
+            labels=labels,
+            assignee=assignee,
+            milestone=milestone_filter,
+            author=author,
+        )
+
+        batch_ops = BatchOperations(
+            owner=self.config.GITHUB_OWNER,
+            repo=self.config.GITHUB_REPO,
+            token=self.config.github_token,
+        )
+        return batch_ops.set_milestone(
+            issues, milestone, dry_run=dry_run, auto_confirm=auto_confirm
+        )
+
     def show_statistics(self) -> bool:
         """显示Issues统计信息"""
         print("📊 显示Issues统计信息...")

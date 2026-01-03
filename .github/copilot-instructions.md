@@ -177,10 +177,11 @@ github-manager export issues.json -f json --label bug
 github-manager export roadmap.md -f markdown --template roadmap
 github-manager export report.md -f markdown --template report --milestone "v2.0"
 
-# ❌ Batch operations on SAGE issues (NOT YET IMPLEMENTED)
-# github-manager batch close --label "wontfix"
-# github-manager batch label --add "priority:high" --filter "bug"
-# github-manager batch assign --assignee shuhao --label "p0"
+# ✅ Batch operations on SAGE issues (IMPLEMENTED)
+github-manager batch-close --label "wontfix" --dry-run  # 预览模式
+github-manager batch-label --add "priority:high" --label "bug"
+github-manager batch-assign -a shuhao --label "p0"
+github-manager batch-milestone "v3.0" --state open
 
 # ❌ AI-powered features (NOT YET IMPLEMENTED)
 # github-manager summarize --issue 123

@@ -90,19 +90,19 @@ github-manager export --state open --label bug --format markdown
 **Expected Usage**:
 ```bash
 # Close issues
-github-manager batch close --label "wontfix"
-github-manager batch close --filter "state=open" --milestone "old-sprint"
+github-manager batch-close --label "wontfix"
+github-manager batch-close --state open --milestone "old-sprint"
 
 # Add/remove labels
-github-manager batch label --add "priority:high" --filter "label=bug"
-github-manager batch label --remove "needs-review" --state closed
+github-manager batch-label --add "priority:high" --label bug
+github-manager batch-label --remove "needs-review" --state closed
 
 # Assign issues
-github-manager batch assign --assignee shuhao --label "p0"
-github-manager batch assign --assignee shuhao --milestone "v2.0"
+github-manager batch-assign -a shuhao --label "p0"
+github-manager batch-assign -a shuhao --milestone "v2.0"
 
 # Update milestone
-github-manager batch milestone --set "v3.0" --label "feature"
+github-manager batch-milestone "v3.0" --label "feature"
 ```
 
 **Implementation Requirements**:
@@ -120,7 +120,19 @@ github-manager batch milestone --set "v3.0" --label "feature"
 - `src/sage_github/helpers/batch_operations.py` - Create batch operations helper
 - `src/sage_github/manager.py` - Add batch methods
 
-**Status**: 🔴 Not Started
+**Status**: � Completed
+
+**Implementation Date**: 2026-01-03
+
+**Notes**:
+- Four batch commands: batch-close, batch-label, batch-assign, batch-milestone
+- All commands support dry-run mode (--dry-run) for previewing changes
+- Confirmation prompts before executing (can skip with --yes)
+- Rich preview table showing affected issues (first 20)
+- Progress bars for operations
+- Full filtering support (state, labels, assignee, milestone, author)
+- Direct GitHub REST API integration
+- Tested with 128 SAGE open issues
 
 ---
 
