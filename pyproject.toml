@@ -47,9 +47,9 @@ dependencies = [
 dev = [
     "pytest>=7.0.0",
     "pytest-cov>=4.0.0",
-    "black>=23.0.0",
-    "isort>=5.12.0",
-    "mypy>=1.0.0",
+    "ruff>=0.14.6",
+    "mypy>=1.11.0",
+    "pre-commit>=4.0.0",
     "types-requests>=2.31.0",
     "types-PyYAML>=6.0.0",
 ]
@@ -69,16 +69,37 @@ where = ["src"]
 [tool.setuptools.package-data]
 sage_github = ["py.typed"]
 
-[tool.black]
-line-length = 100
-target-version = ['py310']
+# Ruff configuration (extends ruff.toml)
+[tool.ruff]
+extend = "ruff.toml"
 
-[tool.isort]
-profile = "black"
-line_length = 100
-
+# Mypy configuration
 [tool.mypy]
 python_version = "3.10"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = false
+ignore_missing_imports = true
+show_error_codes = true
+warn_unused_ignores = true
+
+# Coverage configuration
+[tool.coverage.run]
+source = ["src/sage_github"]
+omit = [
+    "*/tests/*",
+    "*/test_*.py",
+    "*/__pycache__/*",
+    "*/site-packages/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "@abstractmethod",
+]
