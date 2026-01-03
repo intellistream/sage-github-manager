@@ -2,7 +2,19 @@
 
 ## Overview
 
-**sage-github-manager** is a Python 3.10+ CLI tool for downloading, analyzing, and managing GitHub Issues with AI capabilities. It provides a command-line interface for GitHub Issues management, analytics, and batch operations.
+**sage-github-manager** is a Python 3.10+ CLI tool specifically designed to **manage GitHub Issues for the SAGE project** (intellistream/SAGE). This tool was extracted from the SAGE project to provide a standalone, reusable issue management system with AI-powered analytics and automation capabilities.
+
+### Primary Purpose
+- **Issue Management**: Download, organize, and track SAGE project issues locally
+- **Analytics & Insights**: Generate reports, identify patterns, and prioritize work
+- **Batch Operations**: Efficiently manage multiple issues (close, label, assign, etc.)
+- **AI-Powered Analysis**: Summarize issues, detect duplicates, suggest labels
+- **Workflow Automation**: Sync issues, create roadmaps, export reports
+
+### Target Users
+- Project maintainers managing SAGE repository issues
+- Contributors needing local issue tracking and organization
+- Developers building custom issue management workflows
 
 ## Project Structure
 
@@ -138,22 +150,62 @@ GITHUB_REPO=SAGE
 
 ## Usage Examples
 
+### Managing SAGE Project Issues
+
 ```bash
-# Download issues
+# Initial setup for SAGE project
+export GITHUB_TOKEN=ghp_xxxxxxxxxxxxx
+export GITHUB_OWNER=intellistream
+export GITHUB_REPO=SAGE
+
+# Download all SAGE issues
 github-manager download
 
-# List issues
-github-manager list
+# List issues with filters
+github-manager list --state open --label bug
+github-manager list --assignee shuhao
 
-# Show analytics
+# Show analytics for SAGE issues
 github-manager analytics
+# Shows: issue distribution, activity trends, contributor stats
 
-# Export data
-github-manager export --format csv --output issues.csv
+# Export SAGE issues for reporting
+github-manager export --format csv --output sage_issues.csv
+github-manager export --format markdown --output ROADMAP.md
 
-# Batch operations
+# Batch operations on SAGE issues
 github-manager batch close --label "wontfix"
+github-manager batch label --add "priority:high" --filter "bug"
+github-manager batch assign --assignee shuhao --label "p0"
+
+# AI-powered features
+github-manager summarize --issue 123
+github-manager detect-duplicates
+github-manager suggest-labels --issue 456
 ```
+
+### Typical Workflows
+
+1. **Daily Issue Triage**
+   ```bash
+   github-manager download  # Sync latest issues
+   github-manager list --state open --sort created --limit 20
+   github-manager analytics  # Check issue health metrics
+   ```
+
+2. **Sprint Planning**
+   ```bash
+   github-manager list --milestone "v2.0" --state open
+   github-manager export --format markdown --filter milestone=v2.0
+   github-manager batch assign --milestone "v2.0"
+   ```
+
+3. **Release Preparation**
+   ```bash
+   github-manager list --label "release-blocker"
+   github-manager batch label --add "resolved" --milestone "v1.5"
+   github-manager export --format csv --output release_report.csv
+   ```
 
 ## Testing & Quality
 
@@ -281,12 +333,33 @@ Package metadata, dependencies, tool configurations
 
 ## Response Style for Copilot
 
-- Be concise but comprehensive
-- Provide exact commands that can be copy-pasted
-- Reference specific files and line numbers when relevant
-- Emphasize code quality and testing
-- Follow the NO FALLBACK LOGIC principle strictly
-- Always declare dependencies in pyproject.toml
+- **Issue Management First**: When user asks about issues, focus on using the tool, not developing it
+- **SAGE Project Context**: Understand this tool is specifically for managing SAGE (intellistream/SAGE) issues
+- **Be concise but comprehensive**: Provide exact commands that can be copy-pasted
+- **Reference specific files and line numbers** when relevant for development tasks
+- **Emphasize code quality and testing** when adding features
+- **Follow the NO FALLBACK LOGIC principle** strictly
+- **Always declare dependencies in pyproject.toml**
+
+## Two Primary Use Cases
+
+### 1. **Using the Tool** (Primary)
+When user wants to:
+- Manage SAGE project issues
+- Run analytics or generate reports
+- Batch operations on issues
+- Export or sync issue data
+
+**Response Style**: Provide ready-to-use CLI commands, explain options, suggest workflows.
+
+### 2. **Developing the Tool** (Secondary)
+When user wants to:
+- Add new features to sage-github-manager
+- Fix bugs in the codebase
+- Improve testing or documentation
+- Modify CLI commands
+
+**Response Style**: Guide code changes, enforce quality standards, provide implementation details.
 
 ## Architecture Principles
 
@@ -298,8 +371,15 @@ Package metadata, dependencies, tool configurations
 6. **Error Messages**: Clear, actionable error messages
 7. **Testing**: Every feature should have tests
 
-## When Helping Developers
+## When Helping Users
 
+### Issue Management Tasks (Primary Focus)
+1. **Understand SAGE project context**: This tool manages SAGE repository issues
+2. **Guide on workflows**: Provide commands for daily triage, sprint planning, releases
+3. **Suggest best practices**: Analytics before decisions, batch ops for efficiency
+4. **Troubleshoot usage**: Check env vars, data sync, filter syntax
+
+### Development Tasks (Secondary Focus)
 1. **Check configuration first**: Many issues are due to missing environment variables
 2. **Guide on testing**: Tests should be run from project root
 3. **Enforce quality standards**: Ruff formatting (line 100), type hints, no fallback logic
