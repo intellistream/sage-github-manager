@@ -13,11 +13,23 @@ This project was extracted from the [SAGE project](https://github.com/intellistr
 ### Core Functionality
 - **Download & Sync**: Full bidirectional synchronization with GitHub
 - **Data Management**: Unified data storage with multiple view formats
+- **List & Filter**: Rich filtering by state, labels, assignees, milestones, authors
+- **Export**: CSV, JSON, and Markdown exports with templates
 - **Statistics**: Comprehensive analytics and reporting
 - **Team Management**: Track team members and assignments
 
-### Advanced Features
-- **AI Analysis**: Intelligent categorization and duplicate detection
+### Advanced Features ✨ NEW
+- **Batch Operations**: Efficiently manage multiple issues at once
+  - Batch close issues with filters
+  - Batch add/remove labels
+  - Batch assign to users
+  - Batch set milestones
+  - Dry-run mode for safety
+- **AI Analysis**: Intelligent issue management
+  - Summarize long issue discussions
+  - Detect duplicate issues automatically
+  - Auto-suggest relevant labels
+  - Comprehensive pattern analysis
 - **Auto-organization**: Timeline-based issue organization
 - **Project Management**: Automated issue assignment and tracking
 - **Custom Views**: JSON, Markdown, and metadata formats
@@ -116,18 +128,47 @@ pip install sage-github-manager
 
 ## CLI Commands
 
-| Command | Description |
-|---------|-------------|
-| `github-manager status` | Show configuration and connection status |
-| `github-manager download` | Download issues from GitHub |
-| `github-manager analytics` | Generate statistics report |
-| `github-manager team` | Team management and analysis |
-| `github-manager ai` | AI-powered analysis |
-| `github-manager sync` | Sync with GitHub |
-| `github-manager organize` | Organize issues by status |
-| `github-manager project` | Project management |
-| `github-manager config` | Show configuration |
-| `github-manager test` | Run test suite |
+| Command | Description | Status |
+|---------|-------------|--------|
+| `github-manager status` | Show configuration and connection status | ✅ |
+| `github-manager download` | Download issues from GitHub | ✅ |
+| `github-manager list` | List issues with rich filtering | ✅ NEW |
+| `github-manager export` | Export to CSV/JSON/Markdown | ✅ NEW |
+| `github-manager batch-close` | Batch close issues | ✅ NEW |
+| `github-manager batch-label` | Batch add/remove labels | ✅ NEW |
+| `github-manager batch-assign` | Batch assign issues | ✅ NEW |
+| `github-manager batch-milestone` | Batch set milestone | ✅ NEW |
+| `github-manager summarize` | AI-powered issue summarization | ✅ NEW |
+| `github-manager detect-duplicates` | Find duplicate issues | ✅ NEW |
+| `github-manager suggest-labels` | Auto-suggest labels | ✅ NEW |
+| `github-manager analytics` | Generate statistics report | ✅ |
+| `github-manager team` | Team management and analysis | ✅ |
+| `github-manager ai` | AI-powered analysis | ✅ |
+| `github-manager sync` | Sync with GitHub | ✅ |
+| `github-manager organize` | Organize issues by status | ✅ |
+| `github-manager project` | Project management | ✅ |
+| `github-manager config` | Show configuration | ✅ |
+| `github-manager test` | Run test suite | ✅ |
+
+### Quick Examples
+
+```bash
+# List issues with filtering
+github-manager list --state open --label bug --sort comments
+
+# Export to different formats
+github-manager export issues.csv
+github-manager export ROADMAP.md -f markdown --template roadmap
+
+# Batch operations
+github-manager batch-close --label wontfix --dry-run
+github-manager batch-label --add priority:high --label bug
+
+# AI features
+github-manager summarize --issue 123
+github-manager detect-duplicates
+github-manager suggest-labels --issue 456
+```
 
 ## Python API
 
@@ -193,21 +234,33 @@ pytest tests/test_config.py -v
 
 ## Future Enhancements
 
+### Recently Completed ✅
+- [x] List command with rich filtering
+- [x] Export to CSV/JSON/Markdown with templates
+- [x] Batch operations (close, label, assign, milestone)
+- [x] AI summarization for issues
+- [x] Duplicate detection
+- [x] Auto label suggestions
+- [x] Comprehensive test suite (98.2% pass rate)
+- [x] Quick start installation script
+
 ### Planned Features
 - [ ] Web UI dashboard
 - [ ] Real-time webhooks support
-- [ ] Multi-repository management
+- [ ] Multi-repository management in single view
 - [ ] Custom plugins system
-- [ ] Export to various formats (CSV, Excel, etc.)
-- [ ] Advanced filtering and search
-- [ ] Integration with other project management tools
+- [ ] Advanced date-range filtering (`--created-after`, `--closed-before`)
+- [ ] Interactive TUI (Text User Interface)
+- [ ] Integration with GitHub Projects (beta)
 
 ### Under Consideration
-- [ ] GitHub Actions integration
-- [ ] Slack/Discord notifications
-- [ ] Automated issue triage
+- [ ] GitHub Actions integration templates
+- [ ] Slack/Discord notification bots
+- [ ] Automated issue triage workflows
 - [ ] Machine learning for priority prediction
 - [ ] GraphQL API support
+- [ ] Self-hosted AI models (privacy-focused)
+- [ ] Issue templates and automation rules
 
 ## Contributing
 

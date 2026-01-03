@@ -14,18 +14,44 @@
 
 ## Installation
 
-### From PyPI (coming soon)
+### Quick Install (Recommended)
 
-```bash
-pip install sage-github-manager
-```
-
-### From Source
+Run the automated installation script:
 
 ```bash
 git clone https://github.com/intellistream/sage-github-manager.git
 cd sage-github-manager
-pip install -e .
+bash quickstart.sh
+```
+
+The script will:
+- ✓ Check Python 3.10+ installation
+- ✓ Install package and dependencies
+- ✓ Set up virtual environment (optional)
+- ✓ Configure GitHub credentials
+- ✓ Install pre-commit hooks
+- ✓ Verify installation
+
+### Manual Installation
+
+```bash
+# Clone repository
+git clone https://github.com/intellistream/sage-github-manager.git
+cd sage-github-manager
+
+# Install with dev dependencies
+pip install -e ".[dev]"
+
+# Set up environment variables
+export GITHUB_TOKEN="your_github_token"
+export GITHUB_OWNER="intellistream"
+export GITHUB_REPO="SAGE"
+```
+
+### From PyPI (coming soon)
+
+```bash
+pip install sage-github-manager
 ```
 
 ## Quick Start
@@ -55,24 +81,36 @@ Or pass them as parameters in your code.
 
 ### 3. Basic Usage
 
+Use the quick start script for automatic setup:
+
+```bash
+# One-line installation and setup
+bash quickstart.sh
+```
+
+Or manually:
+
 ```bash
 # Check status
 github-manager status
 
 # Download issues
-github-manager download --state all
+github-manager download
+
+# List open issues
+github-manager list
 
 # Show statistics
 github-manager analytics
+
+# Export to CSV
+github-manager export issues.csv
 
 # Team analysis
 github-manager team
 
 # Create new issue
 github-manager create
-
-# AI analysis
-github-manager ai --action analyze
 ```
 
 ## CLI Commands
@@ -106,6 +144,157 @@ github-manager sync --direction upload
 github-manager sync --direction both
 ```
 
+### List Issues ✨ NEW
+
+Flexibly list and filter issues with rich formatting:
+
+```bash
+# Basic listing
+github-manager list                                # List all open issues
+github-manager list --state all                    # List all issues
+github-manager list --state closed                 # List closed issues
+
+# Filter by labels (multiple labels = AND)
+github-manager list --label bug
+github-manager list --label bug --label priority:high
+
+# Filter by assignee
+github-manager list --assignee shuhao
+github-manager list --assignee @me                 # Your own issues
+
+# Filter by milestone
+github-manager list --milestone "v2.0"
+
+# Filter by author
+github-manager list --author shuhao
+
+# Sorting options
+github-manager list --sort created                 # Sort by creation time
+github-manager list --sort updated                 # Sort by last update
+github-manager list --sort comments                # Sort by comment count
+
+# Limit results
+github-manager list --limit 10                     # Show top 10
+
+# Combined filters
+github-manager list --state open --label bug \
+  --assignee shuhao --sort comments --limit 20
+
+# Show issue body preview
+github-manager list --body
+```
+
+**Output**: Color-coded table with issue number, title, state, labels, assignee, and statistics.
+
+### Export Issues ✨ NEW
+
+Export issues to various formats for reporting and analysis:
+
+```bash
+# CSV Export (for Excel/Google Sheets)
+github-manager export issues.csv
+github-manager export bugs.csv --state open --label bug
+
+# JSON Export (structured data)
+github-manager export issues.json --format json
+github-manager export open.json -f json --state open
+
+# Markdown Export (for documentation)
+github-manager export ROADMAP.md --format markdown
+github-manager export ROADMAP.md -f markdown --template roadmap
+github-manager export REPORT.md -f markdown --template report
+
+# Combined filtering
+github-manager export sprint.csv \
+  --state open --milestone "v2.0" --label priority:high
+
+# Export with custom filters
+github-manager export release_notes.md \
+  -f markdown --template report \
+  --state closed --milestone "v1.5"
+```
+
+**Supported Formats**:
+- **CSV**: Excel-compatible spreadsheet
+- **JSON**: Structured data with all fields
+- **Markdown**: Three templates:
+  - `default`: Detailed list with metadata
+  - `roadmap`: Grouped by milestone
+  - `report`: Concise summary
+
+### Batch Operations ✨ NEW
+
+Efficiently manage multiple issues at once:
+
+```bash
+# Batch close issues (with dry-run preview)
+github-manager batch-close --label wontfix --dry-run
+github-manager batch-close --label duplicate
+github-manager batch-close --state open --milestone old-sprint
+
+# Batch add labels
+github-manager batch-label --add priority:high --label bug
+github-manager batch-label --add reviewed --state closed
+github-manager batch-label --add needs-docs --assignee shuhao
+
+# Batch remove labels
+github-manager batch-label --remove needs-review --state closed
+github-manager batch-label --remove stale --milestone "v2.0"
+
+# Batch assign issues (multiple assignees supported)
+github-manager batch-assign --assignee shuhao --label p0
+github-manager batch-assign --assignee alice,bob --label bug
+
+# Batch set milestone
+github-manager batch-milestone "v3.0" --state open
+github-manager batch-milestone "v2.5" --label priority:high
+```
+
+**Safety Features**:
+- `--dry-run`: Preview changes without executing
+- Confirmation prompts before batch operations
+- Detailed logs of all changes
+
+### AI-Powered Features ✨ NEW
+
+Leverage AI for intelligent issue management:
+
+```bash
+# Summarize long issue discussions
+github-manager summarize --issue 123
+github-manager summarize --issue 456 --model gpt-4
+
+# Detect duplicate issues automatically
+github-manager detect-duplicates
+github-manager detect-duplicates --threshold 0.8
+
+# Auto-suggest labels based on content
+github-manager suggest-labels --issue 789
+github-manager suggest-labels --issue 123 --model claude
+
+# Comprehensive AI analysis
+github-manager ai --action analyze       # Overall analysis
+github-manager ai --action dedupe        # Find duplicates
+github-manager ai --action optimize      # Optimize labels
+github-manager ai --action report        # Generate AI report
+```
+
+**Setup**: Requires OpenAI or Anthropic API key:
+
+```bash
+# OpenAI (GPT-3.5/GPT-4)
+export OPENAI_API_KEY=sk-...
+
+# Anthropic (Claude)
+export ANTHROPIC_API_KEY=sk-ant-...
+```
+
+**Use Cases**:
+- 📝 **Summarize**: Quick insights from 100+ comment threads
+- 🔍 **Detect Duplicates**: Find similar issues automatically
+- 🏷️ **Suggest Labels**: Consistent labeling
+- 📊 **Analyze**: Identify patterns and trends
+
 ### Statistics & Analysis
 
 ```bash
@@ -118,10 +307,8 @@ github-manager team
 # Update team information from GitHub
 github-manager team --update
 
-# AI-powered analysis
-github-manager ai --action analyze
-github-manager ai --action dedupe
-github-manager ai --action optimize
+# Combined analysis
+github-manager team --update --analysis
 ```
 
 ### Organization & Management
@@ -258,13 +445,13 @@ github-manager organize --apply --confirm
 
 ## Environment Variables
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `GITHUB_TOKEN` | GitHub Personal Access Token | (required) |
-| `GH_TOKEN` | Alternative name for GitHub token | - |
-| `GIT_TOKEN` | Alternative name for GitHub token | - |
-| `GITHUB_OWNER` | Repository owner/organization | intellistream |
-| `GITHUB_REPO` | Repository name | SAGE |
+| Variable       | Description                       | Default       |
+| -------------- | --------------------------------- | ------------- |
+| `GITHUB_TOKEN` | GitHub Personal Access Token      | (required)    |
+| `GH_TOKEN`     | Alternative name for GitHub token | -             |
+| `GIT_TOKEN`    | Alternative name for GitHub token | -             |
+| `GITHUB_OWNER` | Repository owner/organization     | intellistream |
+| `GITHUB_REPO`  | Repository name                   | SAGE          |
 
 ## Development
 

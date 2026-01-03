@@ -123,11 +123,16 @@ class IssuesManager:
                         "title": metadata.get("title", ""),
                         "body": issue_data.get("body", ""),
                         "state": metadata.get("state", "open"),
-                        "user": {"login": metadata.get("author", "unknown")},
+                        "user": {"login": metadata.get("user", "unknown")},
                         "labels": [{"name": label} for label in metadata.get("labels", [])],
                         "assignees": [
                             {"login": assignee} for assignee in metadata.get("assignees", [])
                         ],
+                        "milestone": metadata.get("milestone"),
+                        "created_at": metadata.get("created_at"),
+                        "updated_at": metadata.get("updated_at"),
+                        "closed_at": metadata.get("closed_at"),
+                        "comments": metadata.get("comments_count", 0),
                     }
                 else:
                     # 兼容旧格式的JSON数据
