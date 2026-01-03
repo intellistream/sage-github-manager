@@ -36,7 +36,11 @@ github-manager list --label "priority:high" --assignee shuhao
 - `src/sage_github/helpers/filter_issues.py` - Create filter helper
 - `src/sage_github/manager.py` - Add `list_issues()` method
 
-**Status**: 🔴 Not Started
+**Status**: � Completed
+
+**Implementation Date**: 2026-01-03
+
+**Notes**: Fully implemented with filtering (state, labels, assignee, milestone, author), sorting, and Rich table output.
 
 ---
 
@@ -66,7 +70,16 @@ github-manager export --state open --label bug --format markdown
 - `src/sage_github/helpers/export_issues.py` - Create export helper
 - `src/sage_github/manager.py` - Add `export_issues()` method
 
-**Status**: 🔴 Not Started
+**Status**: 🟢 Completed
+
+**Implementation Date**: 2026-01-03
+
+**Notes**: 
+- Supports CSV, JSON, and Markdown formats
+- Three Markdown templates: default (detailed list), roadmap (milestone-grouped), report (concise)
+- Full filtering support (state, labels, assignee, milestone, author)
+- Auto-adds file extension based on format
+- Shows file size and location after export
 
 ---
 

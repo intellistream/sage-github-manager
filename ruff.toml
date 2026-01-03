@@ -35,6 +35,7 @@ select = [
 ignore = [
     "E501",   # line too long (handled by formatter)
     "B904",   # raise-without-from-inside-except
+    "B008",   # function-call-in-default-argument (needed for Typer)
     "C901",   # complex-structure (too-complex function)
     "E402",   # module-import-not-at-top-of-file
 ]

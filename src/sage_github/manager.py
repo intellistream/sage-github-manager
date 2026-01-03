@@ -335,6 +335,72 @@ class IssuesManager:
 
         return filtered_issues
 
+    def export_issues(
+        self,
+        output_path: Path | str,
+        format: str = "csv",
+        state: str = "all",
+        labels: list[str] | None = None,
+        assignee: str | None = None,
+        milestone: str | None = None,
+        author: str | None = None,
+        template: str = "default",
+    ) -> bool:
+        """
+        导出Issues到文件
+
+        Args:
+            output_path: 输出文件路径
+            format: 导出格式 (csv/json/markdown)
+            state: 状态过滤
+            labels: 标签过滤
+            assignee: 负责人过滤
+            milestone: 里程碑过滤
+            author: 创建者过滤
+            template: Markdown模板 (default/roadmap/report)
+
+        Returns:
+            是否成功
+        """
+        from sage_github.helpers.export_issues import IssuesExporter
+
+        # 获取过滤后的Issues
+        issues = self.list_issues(
+            state=state,
+            labels=labels,
+            assignee=assignee,
+            milestone=milestone,
+            author=author,
+            sort_by="created",
+            reverse=True,
+        )
+
+        if not issues:
+            print("⚠️ 没有符合条件的Issues")
+            return False
+
+        # 转换路径
+        output_path = Path(output_path)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+
+        # 导出
+        exporter = IssuesExporter(issues)
+
+        if format == "csv":
+            success = exporter.export_to_csv(output_path)
+        elif format == "json":
+            success = exporter.export_to_json(output_path, pretty=True)
+        elif format == "markdown":
+            success = exporter.export_to_markdown(output_path, template=template)
+        else:
+            print(f"❌ 不支持的格式: {format}")
+            return False
+
+        if success:
+            print(f"✅ 导出成功: {output_path}")
+            print(f"📊 导出了 {len(issues)} 个Issues")
+        return success
+
     def show_statistics(self) -> bool:
         """显示Issues统计信息"""
         print("📊 显示Issues统计信息...")

@@ -236,6 +236,97 @@ def list_issues(
         console.print(f"\n🔍 过滤条件: {' | '.join(filters_applied)}")
 
 
+@app.command("export")
+def export_issues(
+    output: str = typer.Argument(..., help="输出文件路径"),
+    format: str = typer.Option("csv", "--format", "-f", help="导出格式: csv, json, markdown"),
+    state: str = typer.Option("all", help="Issue状态: all, open, closed"),
+    label: list[str] = typer.Option([], "--label", "-l", help="按标签过滤"),
+    assignee: str | None = typer.Option(None, "--assignee", "-a", help="按负责人过滤"),
+    milestone: str | None = typer.Option(None, "--milestone", "-m", help="按里程碑过滤"),
+    author: str | None = typer.Option(None, "--author", help="按创建者过滤"),
+    template: str = typer.Option("default", help="Markdown模板: default, roadmap, report"),
+):
+    """导出Issues到文件
+
+    支持多种导出格式和过滤条件，方便生成报告和分析。
+
+    示例:
+      github-manager export issues.csv                    # 导出所有Issues到CSV
+      github-manager export issues.json -f json          # 导出为JSON
+      github-manager export roadmap.md -f markdown       # 导出为Markdown
+      github-manager export open_bugs.csv --state open --label bug
+      github-manager export v2.0.md -f markdown --milestone "v2.0" --template roadmap
+
+    支持的格式:
+      - csv: 适合在Excel/Sheets中分析
+      - json: 适合程序处理和API集成
+      - markdown: 适合文档和报告
+
+    Markdown模板:
+      - default: 完整的Issue详情列表
+      - roadmap: 按里程碑分组的路线图
+      - report: 简洁的报告格式
+    """
+    console.print(f"📤 [bold blue]导出Issues (格式: {format})[/bold blue]")
+
+    manager = IssuesManager()
+    output_path = Path(output)
+
+    # 自动添加扩展名
+    if not output_path.suffix:
+        if format == "csv":
+            output_path = output_path.with_suffix(".csv")
+        elif format == "json":
+            output_path = output_path.with_suffix(".json")
+        elif format == "markdown":
+            output_path = output_path.with_suffix(".md")
+
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console,
+    ) as progress:
+        task = progress.add_task("导出中...", total=None)
+
+        success = manager.export_issues(
+            output_path=output_path,
+            format=format,
+            state=state,
+            labels=label if label else [],
+            assignee=assignee,
+            milestone=milestone,
+            author=author,
+            template=template,
+        )
+
+        progress.update(task, completed=True)
+
+    if not success:
+        console.print("❌ [red]导出失败[/red]")
+        raise typer.Exit(1)
+
+    # 显示导出信息
+    console.print(f"\n📁 [green]文件位置[/green]: {output_path.absolute()}")
+    console.print(f"📊 [green]文件大小[/green]: {output_path.stat().st_size / 1024:.2f} KB")
+
+    # 显示过滤条件
+    filters_applied = []
+    if state != "all":
+        filters_applied.append(f"状态={state}")
+    if label:
+        filters_applied.append(f"标签={', '.join(label)}")
+    if assignee is not None:
+        filters_applied.append(f"负责人={assignee or '未分配'}")
+    if milestone is not None:
+        filters_applied.append(f"里程碑={milestone or '无'}")
+    if author:
+        filters_applied.append(f"创建者={author}")
+
+    if filters_applied:
+        console.print(f"\n🔍 应用的过滤条件: {' | '.join(filters_applied)}")
+
+
 @app.command("stats")
 def statistics():
     """显示Issues统计信息"""
