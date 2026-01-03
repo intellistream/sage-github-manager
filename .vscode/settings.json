@@ -39,9 +39,8 @@
   "files.trimTrailingWhitespace": true,
   "files.insertFinalNewline": true,
   "files.trimFinalNewlines": true,
-  "ruff.lint.run": "onSave",
-  "ruff.format.args": ["--config", "${workspaceFolder}/ruff.toml"],
-  "ruff.lint.args": ["--config", "${workspaceFolder}/ruff.toml"],
+  "ruff.configurationPreference": "filesystemFirst",
+  "ruff.path": ["ruff"],
   "mypy-type-checker.args": [
     "--ignore-missing-imports",
     "--show-error-codes"
