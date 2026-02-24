@@ -14,6 +14,7 @@ tools: ['vscode', 'execute', 'read', 'agent', 'edit', 'search', 'web', 'todo', '
 ## Rules
 - Keep fail-fast behavior; no silent fallbacks.
 - Keep dependency declarations in `pyproject.toml`.
+- Do not create new local virtual environments (`venv`/`.venv`); use the existing configured Python environment.
 - Preserve UX contracts for `github-manager` / `gh-issues`.
 - Keep helpers single-purpose and typed.
 

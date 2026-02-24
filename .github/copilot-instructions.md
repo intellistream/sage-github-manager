@@ -7,6 +7,7 @@
 ## Critical rules
 - No fallback logic: fail fast with explicit error messages.
 - Keep dependencies declared in `pyproject.toml`; no ad-hoc manual dependency drift.
+- Do not create new local virtual environments (`venv`/`.venv`) in this repo; use the existing configured Python environment.
 - Preserve config/data conventions under `~/.github-manager/...`.
 - Keep typed APIs and clear CLI behavior (`github-manager` / `gh-issues`).
 
