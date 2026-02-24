@@ -8,9 +8,7 @@ version = "0.1.0"
 description = "GitHub Issues Management Tool - Download, analyze, and manage GitHub Issues with AI"
 readme = "README.md"
 requires-python = ">=3.10"
-authors = [
-    { name = "IntelliStream Team", email = "shuhao_zhang@hust.edu.cn" },
-]
+authors = [{ name = "IntelliStream Team", email = "shuhao_zhang@hust.edu.cn" }]
 keywords = [
     "github",
     "issues",
@@ -32,7 +30,7 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "License :: OSI Approved :: MIT License",
 ]
-license = {text = "MIT"}
+license = { text = "MIT" }
 
 dependencies = [
     "typer>=0.15.0,<1.0.0",
@@ -53,6 +51,7 @@ dev = [
     "pre-commit>=4.0.0",
     "types-requests>=2.31.0",
     "types-PyYAML>=6.0.0",
+    "sage-pypi-publisher>=0.1.0",
 ]
 
 [project.scripts]
@@ -87,12 +86,7 @@ warn_unused_ignores = true
 # Coverage configuration
 [tool.coverage.run]
 source = ["src/sage_github"]
-omit = [
-    "*/tests/*",
-    "*/test_*.py",
-    "*/__pycache__/*",
-    "*/site-packages/*",
-]
+omit = ["*/tests/*", "*/test_*.py", "*/__pycache__/*", "*/site-packages/*"]
 
 [tool.coverage.report]
 exclude_lines = [
