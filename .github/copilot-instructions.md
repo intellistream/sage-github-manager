@@ -19,3 +19,10 @@
 1. Implement focused changes and keep command UX stable.
 2. Add tests under `tests/` for new behavior.
 3. Run lint/type/test checks before handoff.
+
+## Polyrepo coordination (mandatory)
+
+- This repository is an independent SAGE sub-repository and is developed/released independently.
+- Do not assume sibling source directories exist locally in `intellistream/SAGE`.
+- For cross-repo rollout, publish this repo/package first, then bump the version pin in `SAGE/packages/sage/pyproject.toml` when applicable.
+- Do not add local editable installs of other SAGE sub-packages in setup scripts or docs.
