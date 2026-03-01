@@ -388,8 +388,8 @@ pre-commit run --all-files
 # Update hooks
 pre-commit autoupdate
 
-# Skip hooks (not recommended)
-git commit --no-verify
+# Run hooks only on changed files
+pre-commit run
 ```
 
 ### Tests Fail

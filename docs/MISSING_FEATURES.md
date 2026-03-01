@@ -36,7 +36,7 @@ github-manager list --label "priority:high" --assignee shuhao
 - `src/sage_github/helpers/filter_issues.py` - Create filter helper
 - `src/sage_github/manager.py` - Add `list_issues()` method
 
-**Status**: � Completed
+**Status**: 🟢 Completed
 
 **Implementation Date**: 2026-01-03
 
@@ -120,7 +120,7 @@ github-manager batch-milestone "v3.0" --label "feature"
 - `src/sage_github/helpers/batch_operations.py` - Create batch operations helper
 - `src/sage_github/manager.py` - Add batch methods
 
-**Status**: � Completed
+**Status**: 🟢 Completed
 
 **Implementation Date**: 2026-01-03
 
@@ -168,7 +168,7 @@ github-manager ai-analyze  # Keep general analysis
 - `src/sage_github/cli.py` - Add dedicated commands
 - `src/sage_github/helpers/ai_analyzer.py` - Refactor for specific operations
 
-**Status**: � Completed
+**Status**: 🟢 Completed
 
 **Implementation Date**: 2026-01-03
 
