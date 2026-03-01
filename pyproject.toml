@@ -43,7 +43,10 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+full = []
 dev = [
+    # dev includes [full] — no need for a separate extras install
+    "sage-github-manager[full]",
     "pytest>=7.0.0",
     "pytest-cov>=4.0.0",
     "ruff>=0.14.6",
