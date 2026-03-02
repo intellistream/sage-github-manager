@@ -222,7 +222,7 @@ class IssueDataManager:
                 return None
 
             with open(data_file, encoding="utf-8") as f:
-                return json.load(f)
+                return json.load(f)  # type: ignore[no-any-return]
         except Exception as e:
             print(f"❌ 读取Issue #{issue_number} 数据失败: {e}")
             return None
@@ -582,7 +582,7 @@ class IssueDataManager:
                 content = f.read()
 
             lines = content.split("\n")
-            issue_data = {}
+            issue_data: dict[str, Any] = {}
 
             # 从文件名提取信息
             filename = md_file.name

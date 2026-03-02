@@ -25,7 +25,7 @@ try:
 except ImportError:
     # Fallback: add parent directory to path
     sys.path.insert(0, str(Path(__file__).parent.parent))
-    from config import IssuesConfig as Config
+    from config import IssuesConfig as Config  # type: ignore[no-redef]
 
 
 def find_token():

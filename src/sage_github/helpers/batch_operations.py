@@ -20,7 +20,7 @@ class BatchOperations:
     所有操作支持 dry-run 模式和确认提示。
     """
 
-    def __init__(self, owner: str, repo: str, token: str):
+    def __init__(self, owner: str, repo: str, token: str | None):
         """初始化批量操作管理器
 
         Args:
@@ -31,10 +31,11 @@ class BatchOperations:
         self.owner = owner
         self.repo = repo
         self.token = token
-        self.headers = {
-            "Authorization": f"token {token}",
+        self.headers: dict[str, str] = {
             "Accept": "application/vnd.github.v3+json",
         }
+        if token:
+            self.headers["Authorization"] = f"token {token}"
         self.base_url = f"https://api.github.com/repos/{owner}/{repo}"
 
     def _update_issue(self, issue_number: int, **kwargs) -> bool:
@@ -60,7 +61,7 @@ class BatchOperations:
         url = f"{self.base_url}/milestones"
         response = requests.get(url, headers=self.headers, params={"state": "all"}, timeout=30)
         if response.status_code == 200:
-            return response.json()
+            return response.json()  # type: ignore[no-any-return]
         return []
 
     def close_issues(
@@ -452,7 +453,7 @@ class BatchOperations:
         milestones = self._get_milestones()
         for milestone in milestones:
             if milestone["title"] == milestone_title:
-                return milestone["number"]
+                return milestone["number"]  # type: ignore[no-any-return]
         return None
 
     def _show_preview_table(self, issues: list[dict[str, Any]], operation: str) -> None:

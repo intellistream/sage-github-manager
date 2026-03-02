@@ -89,7 +89,7 @@ class IssuesTestSuite:
                 return True
 
             # 使用manager的内置连接测试
-            return self.manager.test_github_connection()
+            return bool(self.manager.test_github_connection())
         except Exception as e:
             # 在CI环境中，网络相关的失败是可以容忍的
             if os.environ.get("CI") == "true":
@@ -117,7 +117,7 @@ class IssuesTestSuite:
         try:
             # 使用manager的统计功能
             success = self.manager.show_statistics()
-            return success
+            return bool(success)
         except Exception as e:
             console.print(f"❌ 统计生成测试失败: {e}")
             return False
@@ -185,7 +185,7 @@ class IssuesTestSuite:
             console.print(f"   {status}")
 
             self.test_results.append((test_name, result, ""))
-            return result
+            return bool(result)
         except Exception as e:
             console.print(f"   ❌ ERROR: {e}")
             self.test_results.append((test_name, False, str(e)))

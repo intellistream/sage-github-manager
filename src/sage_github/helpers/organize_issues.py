@@ -16,7 +16,7 @@ Issues整理脚本 - 根据关闭时间将issues移动到不同状态列
 """
 
 import argparse
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import json
 from pathlib import Path
 import sys
@@ -83,7 +83,7 @@ class IssuesOrganizer:
     def categorize_issues(self, issues):
         """根据关闭时间分类issues"""
 
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         one_week_ago = now - timedelta(days=7)
         one_month_ago = now - timedelta(days=30)
 

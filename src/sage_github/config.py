@@ -149,7 +149,7 @@ class IssuesConfig:
                     with open(config_path, encoding="utf-8") as f:
                         config = json.load(f)
                     # print(f"✅ 已加载配置: {config_path}")
-                    return config
+                    return config  # type: ignore[no-any-return]
                 except Exception as e:
                     print(f"⚠️ 加载配置文件失败 {config_path}: {e}")
 
@@ -235,6 +235,17 @@ class IssuesConfig:
             with open(assignments_file, "w", encoding="utf-8") as f:
                 json.dump(default_assignments, f, indent=2, ensure_ascii=False)
 
+        # settings.json
+        settings_file = self.metadata_path / "settings.json"
+        if not settings_file.exists():
+            default_settings = {
+                "sync_update_history": True,
+                "auto_backup": True,
+                "verbose_output": False,
+            }
+            with open(settings_file, "w", encoding="utf-8") as f:
+                json.dump(default_settings, f, indent=2, ensure_ascii=False)
+
     def _load_github_token(self) -> str | None:
         """加载GitHub Token"""
 
@@ -303,7 +314,7 @@ class IssuesConfig:
             headers=headers,
         )
         response.raise_for_status()
-        return response.json()
+        return response.json()  # type: ignore[no-any-return]
 
 
 # 兼容性别名

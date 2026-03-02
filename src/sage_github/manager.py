@@ -166,7 +166,7 @@ class IssuesManager:
         lines = content.split("\n")
 
         # Initialize issue data
-        issue_data = {
+        issue_data: dict[str, Any] = {
             "title": "",
             "body": content,
             "state": "open",  # default
@@ -250,7 +250,7 @@ class IssuesManager:
 
     def _generate_statistics(self, issues: list[dict[str, Any]]) -> dict[str, Any]:
         """Generate statistics from issues data."""
-        stats = {
+        stats: dict[str, Any] = {
             "total": len(issues),
             "open": 0,
             "closed": 0,
