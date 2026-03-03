@@ -26,6 +26,7 @@ from pathlib import Path
 import re
 import sys
 import time
+from typing import Any
 
 from github_helper import GitHubProjectManager
 import requests
@@ -42,8 +43,8 @@ try:
 except ImportError:
     # 如果相对导入失败，使用绝对导入
     sys.path.insert(0, str(SCRIPT_DIR.parent))
-    from config import IssuesConfig
-    from issue_data_manager import IssueDataManager
+    from config import IssuesConfig  # type: ignore[no-redef]
+    from issue_data_manager import IssueDataManager  # type: ignore[no-redef]
 
 # Import github_helper directly
 sys.path.insert(0, str(SCRIPT_DIR))
@@ -72,7 +73,7 @@ def graphql_request(
     variables: dict | None = None,
     retries: int = 2,
 ):
-    payload = {"query": query}
+    payload: dict[str, Any] = {"query": query}
     if variables is not None:
         payload["variables"] = variables
     attempt = 0

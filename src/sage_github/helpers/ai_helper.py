@@ -89,7 +89,7 @@ class AIHelper:
         body = issue.get("body", "")
 
         if not body:
-            return title
+            return str(title)
 
         prompt = f"""请用中文简洁总结以下 GitHub Issue（不超过{max_length}字）：
 
@@ -135,7 +135,7 @@ class AIHelper:
                 temperature=0.3,
             )
 
-            return response.choices[0].message.content.strip()
+            return str(response.choices[0].message.content or "").strip()
         except Exception as e:
             console.print(f"❌ [red]OpenAI API 调用失败: {e}[/red]")
             return None
@@ -153,7 +153,7 @@ class AIHelper:
                 messages=[{"role": "user", "content": prompt}],
             )
 
-            return message.content[0].text.strip()
+            return str(message.content[0].text).strip()  # type: ignore[union-attr]
         except Exception as e:
             console.print(f"❌ [red]Claude API 调用失败: {e}[/red]")
             return None
@@ -277,7 +277,7 @@ class AIHelper:
         Returns:
             分析结果字典
         """
-        results = {"total": len(issues), "processed": 0, "failed": 0, "data": []}
+        results: dict[str, Any] = {"total": len(issues), "processed": 0, "failed": 0, "data": []}
 
         for issue in issues:
             try:

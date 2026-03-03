@@ -169,7 +169,7 @@ github-manager suggest-labels --issue 456
 |--------|-------|
 | Total Python Files | 20 |
 | Lines of Code | ~5,000 |
-| Test Coverage | TBD (tests not yet written) |
+| Test Coverage | Test suite available (run `pytest` for current metrics) |
 | Helper Modules | 13 |
 | CLI Commands | 8 (download, list, export, team, analytics, stats, show, web) |
 

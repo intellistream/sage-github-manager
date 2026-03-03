@@ -8,7 +8,7 @@
 **用途**: VS Code 工作区设置
 
 **配置内容**:
-- ✅ Python 解释器路径 (`.venv/bin/python`)
+- ✅ Python 解释器路径（使用当前已配置环境）
 - ✅ Pylance 类型检查 (basic 模式)
 - ✅ Pytest 测试框架集成
 - ✅ Ruff 作为默认格式化器
@@ -78,16 +78,12 @@ VS Code 打开项目时会自动提示安装这些扩展。
 打开项目后，VS Code 会自动:
 
 1. **提示安装推荐扩展** - 点击 "Install All" 安装所有推荐扩展
-2. **检测 Python 解释器** - 选择 `.venv/bin/python` (如果存在)
+2. **检测 Python 解释器** - 选择当前已配置的 Conda/Python 环境
 3. **加载 Copilot 指令** - 从 `.github/copilot-instructions.md` 加载项目上下文
 
-如果没有虚拟环境，运行:
+如需安装开发依赖，请在当前已配置环境中执行：
 ```bash
-python -m venv .venv
-source .venv/bin/activate  # Linux/Mac
-# 或
-.venv\Scripts\activate     # Windows
-pip install -e ".[dev]"
+python -m pip install -e ".[dev]"
 ```
 
 ## ⚙️ 自动化功能
@@ -133,8 +129,7 @@ pip install -e ".[dev]"
 
 ### Python 解释器未找到
 - 按 `Ctrl+Shift+P` → "Python: Select Interpreter"
-- 选择 `.venv/bin/python`
-- 如果没有虚拟环境，先创建: `python -m venv .venv`
+- 选择当前已配置环境的解释器（例如 Conda 环境）
 
 ### Ruff 格式化不工作
 - 确保已安装 Ruff 扩展: `charliermarsh.ruff`
@@ -142,7 +137,7 @@ pip install -e ".[dev]"
 - 重新加载 VS Code 窗口
 
 ### 测试发现失败
-- 确保已安装开发依赖: `pip install -e ".[dev]"`
+- 确保已安装开发依赖: `python -m pip install -e ".[dev]"`
 - 检查 `pytest.ini` 配置
 - 查看 "Python" 输出面板的错误信息
 
